@@ -1,0 +1,17 @@
+define C_PROJECT_template
+$2_SRCFILES += $1.c
+$2_SRCFILES += $($2_DEPENDS)
+$2_DEPEND_OBJS:=$($2_DEPENDS:.c=.o)
+
+$2_OBJFILE:=$1.o
+$2_OBJFILES:=$$($2_SRCFILES:.c=.o)
+
+C_SRCFILES += $$($2_SRCFILES)
+C_OBJFILES += $$($2_OBJFILES)
+
+C_TARGETS += $1
+
+$$($2_OBJFILE): $$($2_DEPEND_OBJS) $1.c
+$1: $$($2_OBJFILES) 
+endef
+
