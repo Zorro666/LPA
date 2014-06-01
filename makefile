@@ -12,7 +12,7 @@ C_LINK_FLAGS:=-g -lm -lpthread
 
 C_PROJECTS:=lpa
 
-LPA_SRCFILES:=lpa_bcd.c
+LPA_SRCFILES:=lpa_bcd.c lpa_main.c
 
 .PHONY: all clean nuke FORCE
 
@@ -54,4 +54,4 @@ TARGETS:=$(C_TARGETS)
 SRCFILES:=$(C_SRCFILES)
 OBJFILES:=$(C_OBJFILES)
 
-
+include *.d
