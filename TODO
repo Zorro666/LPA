@@ -1,0 +1,29 @@
+* test BCD add function
+* Implement BCD create from ASCII (decimal)
+* Implement BCD subtract function
+* Implement BCD multiply function
+* Implement BCD divide function
+* Implement BCD pow function
+* Implement BCD exp function
+* Test BCD create from ASCII (decimal)
+* Test BCD subtract function
+* Test BCD multiply function
+* Test BCD divide function
+* Test BCD pow function
+* Test BCD exp function
+* Implement LPA functions : create from int, convert to ASCII (decimal)
+* Implement LPA create from ASCII (decimal)
+* Implement LPA add function
+* Implement LPA subtract function
+* Implement LPA multiply function
+* Implement LPA divide function
+* Implement LPA pow function
+* Implement LPA exp function
+* Test LPA functions using int (certain number of bits as base - fixed say 32 or 64)
+* Test LPA create from ASCII (decimal)
+* Test LPA add function
+* Test LPA subtract function
+* Test LPA multiply function
+* Test LPA divide function
+* Implement LPA pow function
+* Implement LPA exp function
