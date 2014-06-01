@@ -1,5 +1,7 @@
 /*
-Binary coded decimal large precision arithmetic functions
+Large precision arithmetic functions
 */
 
 #include <stdlib.h>
+
+#include "lpa_bcd.h"

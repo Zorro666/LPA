@@ -10,9 +10,9 @@ C_COMPILE_FLAGS:=-ansi -pedantic-errors
 C_LINK:=g++
 C_LINK_FLAGS:=-g -lm -lpthread
 
-C_PROJECTS:=lpa
+C_PROJECTS:=lpa_test
 
-LPA_SRCFILES:=lpa_bcd.c lpa_main.c
+LPA_TEST_SRCFILES:=lpa_bcd.c lpa.c
 
 .PHONY: all clean nuke FORCE
 
@@ -39,10 +39,11 @@ test:
 	@echo TARGETS=$(TARGETS)
 	@echo SRCFILES=$(SRCFILES)
 	@echo OBJFILES=$(OBJFILES)
-	@echo LPA_OBJFILES=$(LPA_OBJFILES)
+	@echo LPA_TEST_OBJFILES=$(LPA_TEST_OBJFILES)
 
 clean: FORCE
 	rm -f $(OBJFILES)
+	rm -f *.d
 
 nuke: clean
 	rm -f $(TARGETS)
@@ -54,4 +55,4 @@ TARGETS:=$(C_TARGETS)
 SRCFILES:=$(C_SRCFILES)
 OBJFILES:=$(C_OBJFILES)
 
-include *.d
+sinclude *.d
