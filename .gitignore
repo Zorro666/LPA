@@ -22,7 +22,7 @@
 *.i*86
 *.x86_64
 *.hex
-lpa
+lpa_test
 
 # VI files
 *.swp
