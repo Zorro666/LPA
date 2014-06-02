@@ -89,7 +89,7 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 			const LPA_BCD_digitIntermediate value = (digit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_DEBUG("digit:0x%X shift:%d value:%u\n", digit, shift, value);
 			/* ignore 0 if it is the final character */
-			if ((i == maxLoop-1) && (j == 2))
+			if ((i == maxLoop-1) && (j == 1))
 			{
 				if (value == 0)
 				{
