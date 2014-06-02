@@ -21,7 +21,8 @@ int main(const int argc, char** argv)
 	LPA_BCDnumber aNumber;
 	LPA_BCDnumber bNumber;
 	LPA_BCDnumber sumNumber;
-	unsigned int inNumber = 166;
+	unsigned int inA = 166;
+	unsigned int inB = 166;
 	char outBuffer[2048];
 
 	LPA_BCDinitNumber(&sumNumber);
@@ -31,18 +32,22 @@ int main(const int argc, char** argv)
 	}
 	if (argc > 1)
 	{
-		inNumber = (unsigned int)atol(argv[1]);
+		inA = (unsigned int)atol(argv[1]);
 	}
-	printf("inNumber:%u\n", inNumber);
-	LPA_BCDcreateNumber(&testNumber, inNumber);
+	if (argc > 2)
+	{
+		inB = (unsigned int)atol(argv[2]);
+	}
+	printf("inNumber:%u\n", inA);
+	LPA_BCDcreateNumber(&testNumber, inA);
 	printf("memorySize:%u\n", testNumber.memorySize);
 
 	LPA_BCDsprintf(&testNumber, outBuffer, 2048);
-	printf("in:%u\n", inNumber);
+	printf("in:%u\n", inA);
 	printf("out:%s\n", outBuffer);
 
-	LPA_BCDcreateNumber(&aNumber, 100);
-	LPA_BCDcreateNumber(&bNumber, 200);
+	LPA_BCDcreateNumber(&aNumber, inA);
+	LPA_BCDcreateNumber(&bNumber, inB);
 	LPA_BCDadd(&aNumber, &bNumber, &sumNumber);
 
 	LPA_BCDsprintf(&aNumber, outBuffer, 2048);
@@ -50,7 +55,7 @@ int main(const int argc, char** argv)
 	LPA_BCDsprintf(&bNumber, outBuffer, 2048);
 	printf("b:%s\n", outBuffer);
 	LPA_BCDsprintf(&sumNumber, outBuffer, 2048);
-	printf("sum:%s\n", outBuffer);
+	printf("sum:%s %u\n", outBuffer, inA+inB);
 
 	return -1;
 }
