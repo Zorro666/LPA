@@ -44,12 +44,6 @@ static void LPA_BCDextendNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size
 	}
 }
 
-static void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber)
-{
-	pNumber->pDigits = NULL;
-	pNumber->memorySize = 0;
-}
-
 static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size newMemorySize)
 {
 	if (pNumber == NULL)
@@ -71,12 +65,19 @@ Public functions
 
 */
 
+void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber)
+{
+	pNumber->pDigits = NULL;
+	pNumber->memorySize = 0;
+}
+
 void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, const size_t maxNumChars)
 {
 	LPA_BCD_size i;
 	size_t outIndex = 0;
 	const LPA_BCD_size maxLoop = pNumber->memorySize;
 	LPA_BCD_digitIntermediate digit = 0;
+	LPA_DEBUG("maxLoop:%u\n", maxLoop);
 
 	for (i = 0; i < maxLoop; ++i)
 	{
@@ -154,6 +155,7 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 	const LPA_BCD_size sumSize = ((aMemSize > bMemSize) ? aMemSize : bMemSize);
 	LPA_BCD_digit carry = 0;
 
+	LPA_DEBUG("sumSize:%d\n", sumSize);
 	LPA_BCDallocNumber(pSum, sumSize);
 
 	for (i = 0; i < sumSize; ++i)
@@ -162,7 +164,8 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 		
 		LPA_BCD_digitIntermediate aDigit = 0;
 		LPA_BCD_digitIntermediate bDigit = 0;
-		LPA_BCD_digitIntermediate sumDigit = 0;
+		LPA_BCD_digit sumDigit = 0;
+		LPA_DEBUG("i:%d\n", i);
 
 		if (i < aMemSize)
 		{
@@ -175,10 +178,11 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 		for (j = 0; j < 2; ++j)
 		{
 			LPA_BCD_digitIntermediate shift = (j << 2);
-			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) % 10;
-			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) % 10;
+			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
+			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue + bValue;
 			sumValue += carry;
+			LPA_DEBUG("carry:%u sumValue:%u aValue:%u bValue:%u\n", carry, sumValue, aValue, bValue);
 
 			if (sumValue > 9)
 			{
@@ -189,8 +193,9 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 			{
 				carry = 0;
 			}
-			sumDigit |= (sumValue << shift);
+			sumDigit |= (LPA_BCD_digit)(sumValue << shift);
 		}
+		pSum->pDigits[i] = sumDigit;
 	}
 	/* Extend sum if is set */
 	if (carry == 1)
