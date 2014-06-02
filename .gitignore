@@ -27,3 +27,4 @@ lpa_test
 # VI files
 *.swp
 *.swo
+*.vim
