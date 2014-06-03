@@ -1,3 +1,6 @@
+#ifndef LPA_BCD_H
+#define LPA_BCD_H
+
 #include "lpa_core.h"
 
 typedef LPA_uint32 LPA_BCD_size;
@@ -30,3 +33,5 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 Functions that will be needed
 Convert BCD to char* for printing
 */
+
+#endif

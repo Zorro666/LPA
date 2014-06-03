@@ -11,13 +11,14 @@ Binary coded decimal large precision arithmetic functions
 
 #define LPA_BCD_DIGIT_MASK (0xF)
 
-#define LPA_BCD_DEBUG (0)
+#define LPA_BCD_DEBUG (1)
 
 #if LPA_BCD_DEBUG
-#define LPA_DEBUG printf
+#define LPA_BCD_LOG LPA_LOG
 #else
-#define LPA_DEBUG if(0) printf
-#endif
+#define LPA_BCD_LOG if (0) LPA_LOG
+#endif 
+
 /*
 
 Private functions
@@ -77,7 +78,7 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 	size_t outIndex = 0;
 	const LPA_BCD_size maxLoop = pNumber->memorySize;
 	LPA_BCD_digitIntermediate digit = 0;
-	LPA_DEBUG("maxLoop:%u\n", maxLoop);
+	LPA_BCD_LOG("maxLoop:%u\n", maxLoop);
 
 	for (i = 0; i < maxLoop; ++i)
 	{
@@ -88,7 +89,7 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 		{
 			LPA_BCD_digitIntermediate shift = (j << 2);
 			const LPA_BCD_digitIntermediate value = (digit >> shift) & LPA_BCD_DIGIT_MASK;
-			LPA_DEBUG("digit:0x%X shift:%d value:%u\n", digit, shift, value);
+			LPA_BCD_LOG("digit:0x%X shift:%d value:%u\n", digit, shift, value);
 			/* ignore 0 if it is the final character */
 			if ((i == maxLoop-1) && (j == 1))
 			{
@@ -128,7 +129,7 @@ void LPA_BCDcreateNumber(LPA_BCDnumber* const pNumber, LPA_uint32 value)
 	while (workingValue != 0)
 	{
 		LPA_BCD_digitIntermediate digit = workingValue % 10;
-		LPA_DEBUG("workingValue:%u index:%d nibbleIndex:%d digit:%u\n", workingValue, index, nibbleIndex, digit);
+		LPA_BCD_LOG("workingValue:%u index:%d nibbleIndex:%d digit:%u\n", workingValue, index, nibbleIndex, digit);
 		if (nibbleIndex == 0)
 		{
 			LPA_BCDextendNumber(pNumber, 1);
@@ -155,7 +156,7 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 	const LPA_BCD_size sumSize = ((aMemSize > bMemSize) ? aMemSize : bMemSize);
 	LPA_BCD_digit carry = 0;
 
-	LPA_DEBUG("sumSize:%d\n", sumSize);
+	LPA_BCD_LOG("sumSize:%d\n", sumSize);
 	LPA_BCDallocNumber(pSum, sumSize);
 
 	for (i = 0; i < sumSize; ++i)
@@ -165,7 +166,7 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 		LPA_BCD_digitIntermediate aDigit = 0;
 		LPA_BCD_digitIntermediate bDigit = 0;
 		LPA_BCD_digit sumDigit = 0;
-		LPA_DEBUG("i:%d\n", i);
+		LPA_BCD_LOG("i:%d\n", i);
 
 		if (i < aMemSize)
 		{
@@ -182,7 +183,7 @@ void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LP
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue + bValue;
 			sumValue += carry;
-			LPA_DEBUG("carry:%u sumValue:%u aValue:%u bValue:%u\n", carry, sumValue, aValue, bValue);
+			LPA_BCD_LOG("carry:%u sumValue:%u aValue:%u bValue:%u\n", carry, sumValue, aValue, bValue);
 
 			if (sumValue > 9)
 			{
