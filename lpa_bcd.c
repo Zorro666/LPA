@@ -118,9 +118,14 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 	}
 }
 
-void LPA_BCDcreateNumber(LPA_BCDnumber* const pNumber, LPA_uint32 value)
+void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_uint32 value)
 {
-	LPA_uint32 workingValue = value;
+	LPA_BCDcreateNumberFromInt64(pNumber, value);
+}
+
+void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_uint64 value)
+{
+	LPA_uint64 workingValue = value;
 	LPA_BCD_size index = 0;
 	LPA_BCD_size nibbleIndex = 0;
 
@@ -128,8 +133,8 @@ void LPA_BCDcreateNumber(LPA_BCDnumber* const pNumber, LPA_uint32 value)
 
 	while (workingValue != 0)
 	{
-		LPA_BCD_digitIntermediate digit = workingValue % 10;
-		LPA_BCD_LOG("workingValue:%u index:%d nibbleIndex:%d digit:%u\n", workingValue, index, nibbleIndex, digit);
+		LPA_BCD_digitIntermediate digit = (LPA_BCD_digitIntermediate)(workingValue % 10);
+		LPA_BCD_LOG("workingValue:%lu index:%d nibbleIndex:%d digit:%u\n", workingValue, index, nibbleIndex, digit);
 		if (nibbleIndex == 0)
 		{
 			LPA_BCDextendNumber(pNumber, 1);

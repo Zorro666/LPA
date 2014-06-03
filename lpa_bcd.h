@@ -24,7 +24,11 @@ typedef struct LPA_BCDnumber
 } LPA_BCDnumber;
 
 void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber);
-void LPA_BCDcreateNumber(LPA_BCDnumber* const pNumber, LPA_uint32 value);
+
+void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_uint32 value);
+void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_uint64 value);
+void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value);
+
 void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, const size_t maxNumChars);
 
 void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pSum);
