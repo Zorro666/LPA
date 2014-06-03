@@ -45,9 +45,12 @@ int main(const int argc, char** argv)
 	LPA_BCDcreateNumberFromUint64(&aNumber, inA);
 	printf("memorySize:%u\n", aNumber.memorySize);
 
+	LPA_BCDcreateNumberFromASCII(&testNumber, "100");
 	LPA_BCDsprintf(&aNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("in:%lu\n", inA);
 	printf("out:%s\n", outBuffer);
+	LPA_BCDsprintf(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("outASCII:%s\n", outBuffer);
 
 	inA32 = (unsigned int)(inA);
 	LPA_BCDcreateNumberFromUint32(&testNumber, inA32);

@@ -7,6 +7,8 @@ Binary coded decimal large precision arithmetic functions
 #include <stdlib.h>
 #include <stdint.h>
 
+#define LPA_DEBUG 0
+
 #if LPA_DEBUG
 #include <stdio.h>
 #endif

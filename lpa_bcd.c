@@ -123,18 +123,42 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value)
 {
 	const char* pStr = value;
-	char c = *pStr;
+	LPA_BCD_size index = 0;
+	LPA_BCD_size nibbleIndex = 0;
 	if (pStr == NULL)
 	{
 		return;
 	}
-
 	LPA_BCDinitNumber(pNumber);
-	while (c != '\0')
+	if (*pStr == '\0')
+	{
+		return;
+	}
+
+	while (*pStr != '\0')
 	{
 		++pStr;
-		c = *pStr;
 	}
+
+	do
+	{
+		const char c = *--pStr;
+		LPA_BCD_digitIntermediate digit = (LPA_BCD_digitIntermediate)(c - '0');
+		LPA_BCD_LOG("c:%c index:%d nibbleIndex:%d digit:%u\n", c, index, nibbleIndex, digit);
+		if (nibbleIndex == 0)
+		{
+			LPA_BCDextendNumber(pNumber, 1);
+			pNumber->pDigits[index] = 0;
+		}
+		digit = digit << (nibbleIndex * 4);
+		pNumber->pDigits[index] |= (LPA_BCD_digit)digit;
+		nibbleIndex ^= 1;
+		if (nibbleIndex == 0)
+		{
+			++index;
+		}
+	}
+	while (pStr != value);
 }
 
 /* Do we need FromUint32 & FromUint64, could just have FromUint */
