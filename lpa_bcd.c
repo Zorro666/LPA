@@ -90,7 +90,7 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 			LPA_BCD_digitIntermediate shift = (j << 2);
 			const LPA_BCD_digitIntermediate value = (digit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_LOG("digit:0x%X shift:%d value:%u\n", digit, shift, value);
-			/* ignore 0 if it is the final character */
+			/* ignore 0 if it is the final character - could do this in the reverse string loop */
 			if ((i == maxLoop-1) && (j == 1))
 			{
 				if (value == 0)
@@ -102,14 +102,15 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 			++outIndex;
 			if (outIndex == maxNumChars)
 			{
+				--outIndex;
 				break;
 			}
 		}
 	}
 	pBuffer[outIndex] = '\0';
 
-	/* reverse the string to make it correct for printing */
-	/* 		could do this in the above loop but would need to compute number of chars in the output which is a more complex loop */
+	/* reverse the string to make it correct for printing could do this in the above loop, */
+ 	/* but then would need to compute the number of characters in the output which is a more complex loop than a simple reverse */
 	for (i = 0; i < outIndex/2; ++i)
 	{
 		char c = pBuffer[i];
@@ -118,12 +119,31 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 	}
 }
 
-void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_uint32 value)
+/* Decimal ASCII only */
+void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value)
 {
-	LPA_BCDcreateNumberFromInt64(pNumber, value);
+	const char* pStr = value;
+	char c = *pStr;
+	if (pStr == NULL)
+	{
+		return;
+	}
+
+	LPA_BCDinitNumber(pNumber);
+	while (c != '\0')
+	{
+		++pStr;
+		c = *pStr;
+	}
 }
 
-void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_uint64 value)
+/* Do we need FromUint32 & FromUint64, could just have FromUint */
+void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value)
+{
+	LPA_BCDcreateNumberFromUint64(pNumber, value);
+}
+
+void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 value)
 {
 	LPA_uint64 workingValue = value;
 	LPA_BCD_size index = 0;

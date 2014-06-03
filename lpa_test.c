@@ -14,6 +14,8 @@ void LPA_freeMem(void* pMem)
 	free(pMem);
 }
 
+#define CHAR_BUFFER_SIZE (2048)
+
 int main(const int argc, char** argv)
 {
 	int i;
@@ -24,7 +26,7 @@ int main(const int argc, char** argv)
 	unsigned int inA32 = 166;
 	unsigned long inA = 166;
 	unsigned long inB = 166;
-	char outBuffer[2048];
+	char outBuffer[CHAR_BUFFER_SIZE];
 
 	LPA_BCDinitNumber(&sumNumber);
 	for (i = 0; i < argc; i++)
@@ -40,28 +42,28 @@ int main(const int argc, char** argv)
 		inB = (unsigned long)atol(argv[2]);
 	}
 	printf("inNumber:%lu\n", inA);
-	LPA_BCDcreateNumberFromInt64(&aNumber, inA);
+	LPA_BCDcreateNumberFromUint64(&aNumber, inA);
 	printf("memorySize:%u\n", aNumber.memorySize);
 
-	LPA_BCDsprintf(&aNumber, outBuffer, 2048);
+	LPA_BCDsprintf(&aNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("in:%lu\n", inA);
 	printf("out:%s\n", outBuffer);
 
 	inA32 = (unsigned int)(inA);
-	LPA_BCDcreateNumberFromInt32(&testNumber, inA32);
-	LPA_BCDsprintf(&testNumber, outBuffer, 2048);
+	LPA_BCDcreateNumberFromUint32(&testNumber, inA32);
+	LPA_BCDsprintf(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("inA32:%u\n", inA32);
 	printf("out:%s\n", outBuffer);
 
-	LPA_BCDcreateNumberFromInt64(&aNumber, inA);
-	LPA_BCDcreateNumberFromInt64(&bNumber, inB);
+	LPA_BCDcreateNumberFromUint64(&aNumber, inA);
+	LPA_BCDcreateNumberFromUint64(&bNumber, inB);
 	LPA_BCDadd(&aNumber, &bNumber, &sumNumber);
 
-	LPA_BCDsprintf(&aNumber, outBuffer, 2048);
+	LPA_BCDsprintf(&aNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("a:%s\n", outBuffer);
-	LPA_BCDsprintf(&bNumber, outBuffer, 2048);
+	LPA_BCDsprintf(&bNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("b:%s\n", outBuffer);
-	LPA_BCDsprintf(&sumNumber, outBuffer, 2048);
+	LPA_BCDsprintf(&sumNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("sum:%s %ld\n", outBuffer, inA+inB);
 
 	return -1;

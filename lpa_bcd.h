@@ -25,8 +25,11 @@ typedef struct LPA_BCDnumber
 
 void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber);
 
-void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_uint32 value);
-void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_uint64 value);
+/* Do we need FromUint32 & FromUint64, could just have FromUint */
+void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value);
+void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 value);
+
+/* Decimal ASCII only */
 void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value);
 
 void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, const size_t maxNumChars);
