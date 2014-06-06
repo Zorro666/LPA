@@ -1,16 +1,20 @@
-* WOrk out how to handle -ve numbers, a sign flag sounds useful
 * Implement BCD create from ASCII (decimal)
 * Test BCD create from ASCII (decimal)
-* Implement BCD subtract function
-* Test BCD subtract function
+
 * Implement BCD multiply function
 * Test BCD multiply function
+
 * Implement BCD divide function
 * Test BCD divide function
+
 * Implement BCD pow function
 * Test BCD pow function
+
 * Implement BCD exp function
 * Test BCD exp function
+
+* Need a test harness system and some auto-tests
+
 * Implement LPA functions : create from int, convert to ASCII (decimal)
 * Test LPA functions using int (certain number of bits as base - fixed say 32 or 64)
 * Implement LPA create from ASCII (decimal)
