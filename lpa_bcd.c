@@ -230,6 +230,11 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 	LPA_BCD_digitIntermediate digit = 0;
 	size_t maxValidChar = 0;
 
+	if (maxLoop == 0)
+	{
+		pBuffer[0] = '\0';
+		return;
+	}
 	LPA_BCD_LOG("maxLoop:%u\n", maxLoop);
 	for (i = 0; i < maxLoop; ++i)
 	{
@@ -284,25 +289,36 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 	LPA_BCD_size index = 0;
 	LPA_BCD_size nibbleIndex = 0;
 	int negative = 0;
+
+	LPA_BCDinitNumber(pNumber);
 	if (pStr == NULL)
 	{
 		return;
 	}
-	LPA_BCDinitNumber(pNumber);
 	if (*pStr == '\0')
 	{
 		return;
 	}
 
+	while (*pStr != '\0')
+	{
+		const char c = *pStr;
+		if ((c == '-') || (c == '+') || ((c >= '0') && (c <= '9')))
+		{
+			break;
+		}
+		++pStr;
+	}
+
 	if (*pStr == '-')
 	{
 		negative = 1;
-		pStr++;
+		++pStr;
 	}
 	else if (*pStr == '+')
 	{
 		negative = 0;
-		pStr++;
+		++pStr;
 	}
 	pEnd = pStr;
 
@@ -315,6 +331,12 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 	{
 		const char c = *--pStr;
 		LPA_BCD_digitIntermediate digit = (LPA_BCD_digitIntermediate)(c - '0');
+		if (digit > 9)
+		{
+			LPA_freeMem(pNumber->pDigits);
+			LPA_BCDinitNumber(pNumber);
+			return;
+		}
 		LPA_BCD_LOG("c:%c index:%d nibbleIndex:%d digit:%u\n", c, index, nibbleIndex, digit);
 		if (nibbleIndex == 0)
 		{
@@ -434,9 +456,4 @@ void LPA_BCDsubtract(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const p
 	}
 	LPA_BCDsubtractInternal(pA, pB, pResult);
 }
-
-
-/*
-Functions that will be needed
-*/
 

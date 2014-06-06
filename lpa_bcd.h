@@ -33,17 +33,12 @@ void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_int64 value)
 void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value);
 void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 value);
 
-/* Decimal ASCII only */
+/* Decimal ASCII only (signed or unsigned) */
 void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value);
 
 void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, const size_t maxNumChars);
 
 void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult);
 void LPA_BCDsubtract(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult);
-
-/*
-Functions that will be needed
-Convert BCD to char* for printing
-*/
 
 #endif
