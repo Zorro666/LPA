@@ -22,13 +22,17 @@ int main(const int argc, char** argv)
 	LPA_BCDnumber testNumber;
 	LPA_BCDnumber aNumber;
 	LPA_BCDnumber bNumber;
-	LPA_BCDnumber sumNumber;
+	LPA_BCDnumber resultNumber;
+	LPA_BCDnumber tempNumber;
 	unsigned int inA32 = 166;
 	unsigned long inA = 166;
 	unsigned long inB = 166;
+	unsigned long temp = 0;
+	unsigned long result = 0;
 	char outBuffer[CHAR_BUFFER_SIZE];
 
-	LPA_BCDinitNumber(&sumNumber);
+	LPA_BCDinitNumber(&resultNumber);
+	LPA_BCDinitNumber(&tempNumber);
 	for (i = 0; i < argc; i++)
 	{
 		printf("argv[%d] '%s'\n", i, argv[i]);
@@ -59,15 +63,79 @@ int main(const int argc, char** argv)
 	printf("out:%s\n", outBuffer);
 
 	LPA_BCDcreateNumberFromUint64(&aNumber, inA);
-	LPA_BCDcreateNumberFromUint64(&bNumber, inB);
-	LPA_BCDadd(&aNumber, &bNumber, &sumNumber);
-
 	LPA_BCDsprintf(&aNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("a:%s\n", outBuffer);
+
+	LPA_BCDcreateNumberFromUint64(&bNumber, inB);
 	LPA_BCDsprintf(&bNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("b:%s\n", outBuffer);
-	LPA_BCDsprintf(&sumNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("sum:%s %ld\n", outBuffer, inA+inB);
+
+	LPA_BCDadd(&aNumber, &bNumber, &resultNumber);
+	temp = result;
+	result = inA + inB;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("addAB:%s %ld+%ld=%ld\n", outBuffer, inA, inB, result);
+
+	LPA_BCDsubtract(&aNumber, &bNumber, &resultNumber);
+	temp = result;
+	result = inA - inB;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("subAB:%s %ld-%ld=%ld\n", outBuffer, inA, inB, result);
+	temp = result;
+
+	LPA_BCDadd(&aNumber, &resultNumber, &resultNumber);
+	temp = result;
+	result = inA + temp;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("add:%s %ld+%ld=%ld\n", outBuffer, inA, temp, result);
+
+	LPA_BCDadd(&resultNumber, &resultNumber, &resultNumber);
+	temp = result;
+	result = temp + temp;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("add:%s %ld+%ld=%ld\n", outBuffer, temp, temp, result);
+
+	LPA_BCDadd(&resultNumber, &bNumber, &resultNumber);
+	temp = result;
+	result = temp + inB;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("add:%s %ld+%ld=%ld\n", outBuffer, temp, inB, result);
+
+	LPA_BCDadd(&resultNumber, &bNumber, &resultNumber);
+	temp = result;
+	result = temp + inB;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("add:%s %ld+%ld=%ld\n", outBuffer, temp, inB, result);
+
+	LPA_BCDsubtract(&resultNumber, &bNumber, &resultNumber);
+	temp = result;
+	result = temp - inB;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("sub:%s %ld-%ld=%ld\n", outBuffer, temp, inB, result);
+
+	LPA_BCDsubtract(&resultNumber, &bNumber, &resultNumber);
+	temp = result;
+	result = temp - inB;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("sub:%s %ld-%ld=%ld\n", outBuffer, temp, inB, result);
+
+	LPA_BCDsubtract(&aNumber, &resultNumber, &resultNumber);
+	temp = result;
+	result = inA - temp;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("sub:%s %ld-%ld=%ld\n", outBuffer, inA, temp, result);
+
+	LPA_BCDsubtract(&bNumber, &resultNumber, &resultNumber);
+	temp = result;
+	result = inB - temp;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("sub:%s %ld-%ld=%ld\n", outBuffer, inB, temp, result);
+
+	LPA_BCDsubtract(&resultNumber, &resultNumber, &resultNumber);
+	temp = result;
+	result = temp - temp;
+	LPA_BCDsprintf(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
+	printf("sub:%s %ld-%ld=%ld\n", outBuffer, temp, temp, result);
 
 	return -1;
 }
