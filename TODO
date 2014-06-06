@@ -1,6 +1,11 @@
-* Implement BCD create from ASCII (decimal)
-* Test BCD create from ASCII (decimal)
+* Need a test harness system and some auto-tests
 
+* Test LPA functions using int (certain number of bits as base - fixed say 32 or 64)
+* Implement LPA create from ASCII (decimal)
+* Test LPA create from ASCII (decimal)
+* Implement LPA add function
+* Test LPA add function
+* Implement LPA subtract function
 * Implement BCD multiply function
 * Test BCD multiply function
 
@@ -13,15 +18,7 @@
 * Implement BCD exp function
 * Test BCD exp function
 
-* Need a test harness system and some auto-tests
-
 * Implement LPA functions : create from int, convert to ASCII (decimal)
-* Test LPA functions using int (certain number of bits as base - fixed say 32 or 64)
-* Implement LPA create from ASCII (decimal)
-* Test LPA create from ASCII (decimal)
-* Implement LPA add function
-* Test LPA add function
-* Implement LPA subtract function
 * Test LPA subtract function
 * Implement LPA multiply function
 * Test LPA multiply function
