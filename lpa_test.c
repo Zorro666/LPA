@@ -56,6 +56,19 @@ int main(const int argc, char** argv)
 	LPA_BCDsprintf(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("outASCII:%s\n", outBuffer);
 
+	if (argc > 1)
+	{
+		LPA_BCDcreateNumberFromASCII(&testNumber, argv[1]);
+		LPA_BCDsprintf(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+		printf("'%s' outASCII:%s\n", argv[1], outBuffer);
+	}
+	if (argc > 2)
+	{
+		LPA_BCDcreateNumberFromASCII(&testNumber, argv[2]);
+		LPA_BCDsprintf(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+		printf("'%s' outASCII:%s\n", argv[2], outBuffer);
+	}
+
 	inA32 = (int)(inA);
 	LPA_BCDcreateNumberFromInt32(&testNumber, inA32);
 	LPA_BCDsprintf(&testNumber, outBuffer, CHAR_BUFFER_SIZE);

@@ -279,9 +279,11 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 /* Decimal ASCII only */
 void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value)
 {
+	const char* pEnd;
 	const char* pStr = value;
 	LPA_BCD_size index = 0;
 	LPA_BCD_size nibbleIndex = 0;
+	int negative = 0;
 	if (pStr == NULL)
 	{
 		return;
@@ -291,6 +293,18 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 	{
 		return;
 	}
+
+	if (*pStr == '-')
+	{
+		negative = 1;
+		pStr++;
+	}
+	else if (*pStr == '+')
+	{
+		negative = 0;
+		pStr++;
+	}
+	pEnd = pStr;
 
 	while (*pStr != '\0')
 	{
@@ -315,7 +329,8 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 			++index;
 		}
 	}
-	while (pStr != value);
+	while (pStr != pEnd);
+	pNumber->negative = negative;
 }
 
 void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_int32 value)
