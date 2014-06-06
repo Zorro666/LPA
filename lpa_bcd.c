@@ -318,7 +318,25 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 	while (pStr != value);
 }
 
-/* Do we need FromUint32 & FromUint64, could just have FromUint */
+void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_int32 value)
+{
+	LPA_BCDcreateNumberFromInt64(pNumber, value);
+}
+
+void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_int64 value)
+{
+	if (value < 0)
+	{
+		LPA_int64 absValue = -value;
+		LPA_BCDcreateNumberFromUint64(pNumber, (LPA_uint64)absValue);
+		pNumber->negative = 1;
+	}
+	else
+	{
+		LPA_BCDcreateNumberFromUint64(pNumber, (LPA_uint64)value);
+	}
+}
+
 void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value)
 {
 	LPA_BCDcreateNumberFromUint64(pNumber, value);

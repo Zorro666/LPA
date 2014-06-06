@@ -17,6 +17,9 @@ typedef uint8_t LPA_uint8;
 typedef uint32_t LPA_uint32;
 typedef uint64_t LPA_uint64;
 
+typedef int32_t LPA_int32;
+typedef int64_t LPA_int64;
+
 void LPA_ERROR(const char* const);
 
 /* Users of this library have to supply these functions */

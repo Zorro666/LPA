@@ -27,7 +27,9 @@ typedef struct LPA_BCDnumber
 
 void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber);
 
-/* Do we need FromUint32 & FromUint64, could just have FromUint */
+/* Do we need FromUint32 & FromUint64 etc., could we just have FromUint */
+void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_int32 value);
+void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_int64 value);
 void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value);
 void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 value);
 
