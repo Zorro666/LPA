@@ -6,5 +6,6 @@ Large precision arithmetic functions
 
 #include "lpa_core.h"
 #include "lpa_bcd.h"
+#include "lpa_int.h"
 
 #endif
