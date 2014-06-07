@@ -4,10 +4,10 @@
 #include "lpa_core.h"
 
 typedef LPA_uint32 LPA_BCD_size;
-typedef LPA_uint32 LPA_BCD_digitIntermediate;
 typedef LPA_uint8 LPA_BCD_digit;
 
 /* 
+
 LPA_BCDnumber : each byte is 2 digits (4-bits per digit)
 Could use a length member or could have a sentinel e.g. 0xFF to mark end of digits
 Using a sentinel would mean pDigits has to be allocated at all times
@@ -20,8 +20,8 @@ Negative numbers handled as a sign flag and storing the absolute value
 
 typedef struct LPA_BCDnumber
 {
-	LPA_BCD_digit* pDigits;
-	LPA_BCD_size memorySize; /* this is the memory size = 2 * the number of digits */
+	LPA_BCD_digit* pDigits; /* each LPA_BCD_digit is 2 decimal numbers */
+	LPA_BCD_size numDigits;
 	int negative;
 } LPA_BCDnumber;
 

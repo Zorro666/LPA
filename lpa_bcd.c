@@ -19,6 +19,8 @@ Binary coded decimal large precision arithmetic functions
 #define LPA_BCD_LOG if (0) LPA_LOG
 #endif 
 
+typedef LPA_uint32 LPA_BCD_digitIntermediate;
+
 /*
 
 Private functions
@@ -29,7 +31,7 @@ static void LPA_BCDinvert(LPA_BCDnumber* const pNumber)
 {
 	/* loop over the digits: (9-digit) for all digits except units digit which is (10-digit) */
 	LPA_BCD_size i;
-	const LPA_BCD_size maxLoop = pNumber->memorySize;
+	const LPA_BCD_size maxLoop = pNumber->numDigits*2;
 
 	for (i = 0; i < maxLoop; i++)
 	{
@@ -64,28 +66,31 @@ static void LPA_BCDextendNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size
 	else
 	{
 		const LPA_BCD_digit* const pOldDigits = pNumber->pDigits;
-		const LPA_BCD_size oldMemorySize = pNumber->memorySize;
-		const LPA_BCD_size newMemorySize = pNumber->memorySize+(LPA_BCD_size)(sizeof(LPA_BCD_digit)*sizeIncrement);
+		const LPA_BCD_size oldNumDigits = pNumber->numDigits;
+		const LPA_BCD_size newNumDigits = oldNumDigits + sizeIncrement;
+		const LPA_BCD_size oldMemorySize = oldNumDigits * sizeof(LPA_BCD_digit);
+		const LPA_BCD_size newMemorySize = newNumDigits * sizeof(LPA_BCD_digit);
 
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
-		pNumber->memorySize = newMemorySize;
+		pNumber->numDigits = newNumDigits;
 		memcpy(pNumber->pDigits, pOldDigits, oldMemorySize);
 		LPA_freeMem((void*)pOldDigits);
 	}
 }
 
-static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size newMemorySize)
+static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size newNumDigits)
 {
 	if (pNumber == NULL)
 	{
 		LPA_ERROR("LPA_BCDallocNumber::pNumber is NULL");
 		return;
 	}
-	if (newMemorySize != pNumber->memorySize)
+	if (newNumDigits != pNumber->numDigits)
 	{
+		const LPA_BCD_size newMemorySize = newNumDigits * sizeof(LPA_BCD_digit);
 		LPA_freeMem(pNumber->pDigits);
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
-		pNumber->memorySize = newMemorySize;
+		pNumber->numDigits = newNumDigits;
 		memset(pNumber->pDigits, 0, newMemorySize);
 	}
 }
@@ -93,10 +98,10 @@ static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size 
 static void LPA_BCDaddInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult)
 {
 	LPA_BCD_size i = 0;
-	const LPA_BCD_size aMemSize = pA->memorySize;
-	const LPA_BCD_size bMemSize = pB->memorySize;
+	const LPA_BCD_size aNumDigits = pA->numDigits;
+	const LPA_BCD_size bNumDigits = pB->numDigits;
 	/* sum length : extend if needed for the carry */
-	const LPA_BCD_size sumSize = ((aMemSize > bMemSize) ? aMemSize : bMemSize);
+	const LPA_BCD_size sumSize = ((aNumDigits > bNumDigits) ? aNumDigits : bNumDigits);
 	LPA_BCD_digit carry = 0;
 
 	LPA_BCD_LOG("sumSize:%d\n", sumSize);
@@ -111,11 +116,11 @@ static void LPA_BCDaddInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumbe
 		LPA_BCD_digit sumDigit = 0;
 		LPA_BCD_LOG("i:%d\n", i);
 
-		if (i < aMemSize)
+		if (i < aNumDigits)
 		{
 			aDigit = pA->pDigits[i];
 		}
-		if (i < bMemSize)
+		if (i < bNumDigits)
 		{
 			bDigit = pB->pDigits[i];
 		}
@@ -152,10 +157,10 @@ static void LPA_BCDaddInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumbe
 static void LPA_BCDsubtractInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult)
 {
 	LPA_BCD_size i = 0;
-	const LPA_BCD_size aMemSize = pA->memorySize;
-	const LPA_BCD_size bMemSize = pB->memorySize;
+	const LPA_BCD_size aNumDigits = pA->numDigits;
+	const LPA_BCD_size bNumDigits = pB->numDigits;
 	/* sum length : extend if needed for the carry */
-	const LPA_BCD_size sumSize = ((aMemSize > bMemSize) ? aMemSize : bMemSize);
+	const LPA_BCD_size sumSize = ((aNumDigits > bNumDigits) ? aNumDigits : bNumDigits);
 	LPA_BCD_digit carry = 0;
 
 	LPA_BCD_LOG("sumSize:%d\n", sumSize);
@@ -170,11 +175,11 @@ static void LPA_BCDsubtractInternal(const LPA_BCDnumber* const pA, const LPA_BCD
 		LPA_BCD_digit sumDigit = 0;
 		LPA_BCD_LOG("i:%d\n", i);
 
-		if (i < aMemSize)
+		if (i < aNumDigits)
 		{
 			aDigit = pA->pDigits[i];
 		}
-		if (i < bMemSize)
+		if (i < bNumDigits)
 		{
 			bDigit = pB->pDigits[i];
 		}
@@ -218,7 +223,7 @@ Public functions
 void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber)
 {
 	pNumber->pDigits = NULL;
-	pNumber->memorySize = 0;
+	pNumber->numDigits = 0;
 	pNumber->negative = 0;
 }
 
@@ -226,7 +231,7 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 {
 	LPA_BCD_size i;
 	size_t outIndex = 0;
-	const LPA_BCD_size maxLoop = pNumber->memorySize;
+	const LPA_BCD_size maxLoop = pNumber->numDigits;
 	LPA_BCD_digitIntermediate digit = 0;
 	size_t maxValidChar = 0;
 
