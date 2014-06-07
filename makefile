@@ -12,7 +12,7 @@ C_LINK_FLAGS:=-g -lm -lpthread
 
 C_PROJECTS:=lpa_test
 
-LPA_TEST_SRCFILES:=lpa_bcd.c lpa.c
+LPA_TEST_SRCFILES:=lpa_bcd.c lpa_int.c lpa.c
 
 .PHONY: all clean nuke FORCE
 

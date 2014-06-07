@@ -8,7 +8,7 @@ typedef LPA_uint8 LPA_BCD_digit;
 
 /* 
 
-LPA_BCDnumber : each byte is 2 digits (4-bits per digit)
+LPA_BCD_number : each byte is 2 digits (4-bits per digit)
 Could use a length member or could have a sentinel e.g. 0xFF to mark end of digits
 Using a sentinel would mean pDigits has to be allocated at all times
 Using a length member means we have to have some kind a create/init function
@@ -18,27 +18,27 @@ Negative numbers handled as a sign flag and storing the absolute value
 
 */
 
-typedef struct LPA_BCDnumber
+typedef struct LPA_BCD_number
 {
 	LPA_BCD_digit* pDigits; /* each LPA_BCD_digit is 2 decimal numbers */
 	LPA_BCD_size numDigits;
 	int negative;
-} LPA_BCDnumber;
+} LPA_BCD_number;
 
-void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber);
+void LPA_BCD_initNumber(LPA_BCD_number* const pNumber);
 
 /* Do we need FromUint32 & FromUint64 etc., could we just have FromUint */
-void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_int32 value);
-void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_int64 value);
-void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value);
-void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 value);
+void LPA_BCD_fromInt32(LPA_BCD_number* const pNumber, LPA_int32 value);
+void LPA_BCD_fromInt64(LPA_BCD_number* const pNumber, LPA_int64 value);
+void LPA_BCD_fromUint32(LPA_BCD_number* const pNumber, LPA_uint32 value);
+void LPA_BCD_fromUint64(LPA_BCD_number* const pNumber, LPA_uint64 value);
 
 /* Decimal ASCII only (signed or unsigned) */
-void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value);
+void LPA_BCD_fromDecimalASCII(LPA_BCD_number* const pNumber, const char* const value);
 
-void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, const size_t maxNumChars);
+void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBuffer, const size_t maxNumChars);
 
-void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult);
-void LPA_BCDsubtract(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult);
+void LPA_BCD_add(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
+void LPA_BCD_subtract(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
 
 #endif

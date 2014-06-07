@@ -27,7 +27,7 @@ Private functions
 
 */
 
-static void LPA_BCDinvert(LPA_BCDnumber* const pNumber)
+static void LPA_BCD_invert(LPA_BCD_number* const pNumber)
 {
 	/* loop over the digits: (9-digit) for all digits except units digit which is (10-digit) */
 	LPA_BCD_size i;
@@ -56,11 +56,11 @@ static void LPA_BCDinvert(LPA_BCDnumber* const pNumber)
 	pNumber->negative ^= 1;
 }
 
-static void LPA_BCDextendNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size sizeIncrement)
+static void LPA_BCD_extendNumber(LPA_BCD_number* const pNumber, const LPA_BCD_size sizeIncrement)
 {
 	if (pNumber == NULL)
 	{
-		LPA_ERROR("LPA_BCDextendNumber::pNumber is NULL");
+		LPA_ERROR("LPA_BCD_extendNumber::pNumber is NULL");
 		return;
 	}
 	else
@@ -68,8 +68,8 @@ static void LPA_BCDextendNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size
 		const LPA_BCD_digit* const pOldDigits = pNumber->pDigits;
 		const LPA_BCD_size oldNumDigits = pNumber->numDigits;
 		const LPA_BCD_size newNumDigits = oldNumDigits + sizeIncrement;
-		const LPA_BCD_size oldMemorySize = oldNumDigits * sizeof(LPA_BCD_digit);
-		const LPA_BCD_size newMemorySize = newNumDigits * sizeof(LPA_BCD_digit);
+		const size_t oldMemorySize = oldNumDigits * sizeof(LPA_BCD_digit);
+		const size_t newMemorySize = newNumDigits * sizeof(LPA_BCD_digit);
 
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
 		pNumber->numDigits = newNumDigits;
@@ -78,7 +78,7 @@ static void LPA_BCDextendNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size
 	}
 }
 
-static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size newNumDigits)
+static void LPA_BCDallocNumber(LPA_BCD_number* const pNumber, const LPA_BCD_size newNumDigits)
 {
 	if (pNumber == NULL)
 	{
@@ -87,7 +87,7 @@ static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size 
 	}
 	if (newNumDigits != pNumber->numDigits)
 	{
-		const LPA_BCD_size newMemorySize = newNumDigits * sizeof(LPA_BCD_digit);
+		const size_t newMemorySize = newNumDigits * sizeof(LPA_BCD_digit);
 		LPA_freeMem(pNumber->pDigits);
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
 		pNumber->numDigits = newNumDigits;
@@ -95,7 +95,7 @@ static void LPA_BCDallocNumber(LPA_BCDnumber* const pNumber, const LPA_BCD_size 
 	}
 }
 
-static void LPA_BCDaddInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult)
+static void LPA_BCD_addInternal(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
 {
 	LPA_BCD_size i = 0;
 	const LPA_BCD_size aNumDigits = pA->numDigits;
@@ -149,12 +149,12 @@ static void LPA_BCDaddInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumbe
 	/* Extend sum if carry is set */
 	if (carry == 1)
 	{
-		LPA_BCDextendNumber(pResult, 1);
+		LPA_BCD_extendNumber(pResult, 1);
 		pResult->pDigits[sumSize] = 0x1;
 	}
 }
 
-static void LPA_BCDsubtractInternal(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult)
+static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
 {
 	LPA_BCD_size i = 0;
 	const LPA_BCD_size aNumDigits = pA->numDigits;
@@ -210,7 +210,7 @@ static void LPA_BCDsubtractInternal(const LPA_BCDnumber* const pA, const LPA_BCD
 	/* if carry is set then this is a -ve number */
 	if (carry == 1)
 	{
-		LPA_BCDinvert(pResult);
+		LPA_BCD_invert(pResult);
 	}
 }
 
@@ -220,14 +220,14 @@ Public functions
 
 */
 
-void LPA_BCDinitNumber(LPA_BCDnumber* const pNumber)
+void LPA_BCD_initNumber(LPA_BCD_number* const pNumber)
 {
 	pNumber->pDigits = NULL;
 	pNumber->numDigits = 0;
 	pNumber->negative = 0;
 }
 
-void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, const size_t maxNumChars)
+void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBuffer, const size_t maxNumChars)
 {
 	LPA_BCD_size i;
 	size_t outIndex = 0;
@@ -287,7 +287,7 @@ void LPA_BCDsprintf(const LPA_BCDnumber* const pNumber, char* const pBuffer, con
 }
 
 /* Decimal ASCII only */
-void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* const value)
+void LPA_BCD_fromDecimalASCII(LPA_BCD_number* const pNumber, const char* const value)
 {
 	const char* pEnd;
 	const char* pStr = value;
@@ -295,7 +295,7 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 	LPA_BCD_size nibbleIndex = 0;
 	int negative = 0;
 
-	LPA_BCDinitNumber(pNumber);
+	LPA_BCD_initNumber(pNumber);
 	if (pStr == NULL)
 	{
 		return;
@@ -339,13 +339,13 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 		if (digit > 9)
 		{
 			LPA_freeMem(pNumber->pDigits);
-			LPA_BCDinitNumber(pNumber);
+			LPA_BCD_initNumber(pNumber);
 			return;
 		}
 		LPA_BCD_LOG("c:%c index:%d nibbleIndex:%d digit:%u\n", c, index, nibbleIndex, digit);
 		if (nibbleIndex == 0)
 		{
-			LPA_BCDextendNumber(pNumber, 1);
+			LPA_BCD_extendNumber(pNumber, 1);
 			pNumber->pDigits[index] = 0;
 		}
 		digit = digit << (nibbleIndex * 4);
@@ -360,37 +360,37 @@ void LPA_BCDcreateNumberFromASCII(LPA_BCDnumber* const pNumber, const char* cons
 	pNumber->negative = negative;
 }
 
-void LPA_BCDcreateNumberFromInt32(LPA_BCDnumber* const pNumber, LPA_int32 value)
+void LPA_BCD_fromInt32(LPA_BCD_number* const pNumber, LPA_int32 value)
 {
-	LPA_BCDcreateNumberFromInt64(pNumber, value);
+	LPA_BCD_fromInt64(pNumber, value);
 }
 
-void LPA_BCDcreateNumberFromInt64(LPA_BCDnumber* const pNumber, LPA_int64 value)
+void LPA_BCD_fromInt64(LPA_BCD_number* const pNumber, LPA_int64 value)
 {
 	if (value < 0)
 	{
 		LPA_int64 absValue = -value;
-		LPA_BCDcreateNumberFromUint64(pNumber, (LPA_uint64)absValue);
+		LPA_BCD_fromUint64(pNumber, (LPA_uint64)absValue);
 		pNumber->negative = 1;
 	}
 	else
 	{
-		LPA_BCDcreateNumberFromUint64(pNumber, (LPA_uint64)value);
+		LPA_BCD_fromUint64(pNumber, (LPA_uint64)value);
 	}
 }
 
-void LPA_BCDcreateNumberFromUint32(LPA_BCDnumber* const pNumber, LPA_uint32 value)
+void LPA_BCD_fromUint32(LPA_BCD_number* const pNumber, LPA_uint32 value)
 {
-	LPA_BCDcreateNumberFromUint64(pNumber, value);
+	LPA_BCD_fromUint64(pNumber, value);
 }
 
-void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 value)
+void LPA_BCD_fromUint64(LPA_BCD_number* const pNumber, LPA_uint64 value)
 {
 	LPA_uint64 workingValue = value;
 	LPA_BCD_size index = 0;
 	LPA_BCD_size nibbleIndex = 0;
 
-	LPA_BCDinitNumber(pNumber);
+	LPA_BCD_initNumber(pNumber);
 
 	while (workingValue != 0)
 	{
@@ -398,7 +398,7 @@ void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 valu
 		LPA_BCD_LOG("workingValue:%lu index:%d nibbleIndex:%d digit:%u\n", workingValue, index, nibbleIndex, digit);
 		if (nibbleIndex == 0)
 		{
-			LPA_BCDextendNumber(pNumber, 1);
+			LPA_BCD_extendNumber(pNumber, 1);
 			pNumber->pDigits[index] = 0;
 		}
 		digit = digit << (nibbleIndex * 4);
@@ -413,52 +413,52 @@ void LPA_BCDcreateNumberFromUint64(LPA_BCDnumber* const pNumber, LPA_uint64 valu
 	}
 }
 
-void LPA_BCDadd(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult)
+void LPA_BCD_add(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
 {
 	if (pA->negative)
 	{
 		if (pB->negative)
 		{
-			LPA_BCDaddInternal(pA, pB, pResult);
+			LPA_BCD_addInternal(pA, pB, pResult);
 			pResult->negative = 1;
 			return;
 		}
 		else
 		{
-			LPA_BCDsubtractInternal(pB, pA, pResult);
+			LPA_BCD_subtractInternal(pB, pA, pResult);
 			return;
 		}
 	}
 	else if (pB->negative)
 	{
-		LPA_BCDsubtractInternal(pA, pB, pResult);
+		LPA_BCD_subtractInternal(pA, pB, pResult);
 		return;
 	}
-	LPA_BCDaddInternal(pA, pB, pResult);
+	LPA_BCD_addInternal(pA, pB, pResult);
 }
 
-void LPA_BCDsubtract(const LPA_BCDnumber* const pA, const LPA_BCDnumber* const pB, LPA_BCDnumber* const pResult)
+void LPA_BCD_subtract(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
 {
 	if (pA->negative)
 	{
 		if (pB->negative)
 		{
-			LPA_BCDsubtractInternal(pB, pA, pResult);
+			LPA_BCD_subtractInternal(pB, pA, pResult);
 			return;
 		}
 		else
 		{
-			LPA_BCDaddInternal(pA, pB, pResult);
+			LPA_BCD_addInternal(pA, pB, pResult);
 			pResult->negative = 1;
 			return;
 		}
 	}
 	else if (pB->negative)
 	{
-		LPA_BCDaddInternal(pA, pB, pResult);
+		LPA_BCD_addInternal(pA, pB, pResult);
 		pResult->negative = 0;
 		return;
 	}
-	LPA_BCDsubtractInternal(pA, pB, pResult);
+	LPA_BCD_subtractInternal(pA, pB, pResult);
 }
 
