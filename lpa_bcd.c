@@ -415,6 +415,18 @@ void LPA_BCD_fromUint64(LPA_BCD_number* const pNumber, LPA_uint64 value)
 
 void LPA_BCD_add(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
 {
+	if (pA == NULL)
+	{
+		return;
+	}
+	if (pB == NULL)
+	{
+		return;
+	}
+	if (pResult == NULL)
+	{
+		return;
+	}
 	if (pA->negative)
 	{
 		if (pB->negative)
@@ -439,6 +451,18 @@ void LPA_BCD_add(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB,
 
 void LPA_BCD_subtract(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
 {
+	if (pA == NULL)
+	{
+		return;
+	}
+	if (pB == NULL)
+	{
+		return;
+	}
+	if (pResult == NULL)
+	{
+		return;
+	}
 	if (pA->negative)
 	{
 		if (pB->negative)
