@@ -16,6 +16,11 @@ void LPA_freeMem(void* pMem)
 
 #define CHAR_BUFFER_SIZE (2048)
 
+void printLPATestResult(const char* const name, const char* const lpaResult, long a, const char* const op, long b, long spResult)
+{
+	printf("%s:\t0x%s 0x%lX %s 0x%lX = 0x%lX\n", name, lpaResult, a, op, b, spResult);
+}
+
 int testBCD(const int argc, char** argv)
 {
 	LPA_BCD_number testNumber;
@@ -221,76 +226,73 @@ int testINT(const int argc, char** argv)
 	temp = result;
 	result = inA + inB;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("addAB:\t0x%s 0x%lX + 0x%lX = 0x%lX\n", outBuffer, inA, inB, result);
+	printLPATestResult("addAB", outBuffer, inA, "+", inB, result);
 
 	LPA_INT_add(&aNumber, &resultNumber, &resultNumber);
 	temp = result;
 	result = inA + temp;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("add:\t0x%s 0x%lX + 0x%lX = 0x%lX\n", outBuffer, inA, temp, result);
+	printLPATestResult("addABA", outBuffer, inA, "+", temp, result);
 
-#if 0
 	LPA_INT_subtract(&aNumber, &bNumber, &resultNumber);
 	temp = result;
 	result = inA - inB;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("subAB:0x%s %ld - %ld = %ld\n", outBuffer, inA, inB, result);
-	temp = result;
+	printLPATestResult("subAB", outBuffer, inA, "-", inB, result);
 
 	LPA_INT_add(&aNumber, &resultNumber, &resultNumber);
 	temp = result;
 	result = inA + temp;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("add:0x%s %ld + %ld = %ld\n", outBuffer, inA, temp, result);
+	printLPATestResult("add", outBuffer, inA, "+", temp, result);
 
 	LPA_INT_add(&resultNumber, &resultNumber, &resultNumber);
 	temp = result;
 	result = temp + temp;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("add:0x%s %ld + %ld = %ld\n", outBuffer, temp, temp, result);
+	printLPATestResult("add", outBuffer, temp, "+", temp, result);
 
 	LPA_INT_add(&resultNumber, &bNumber, &resultNumber);
 	temp = result;
 	result = temp + inB;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("add:0x%s %ld + %ld = %ld\n", outBuffer, temp, inB, result);
+	printLPATestResult("add", outBuffer, temp, "+", inB, result);
 
 	LPA_INT_add(&resultNumber, &bNumber, &resultNumber);
 	temp = result;
 	result = temp + inB;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("add:0x%s %ld + %ld = %ld\n", outBuffer, temp, inB, result);
+	printLPATestResult("add", outBuffer, temp, "+", inB, result);
 
 	LPA_INT_subtract(&resultNumber, &bNumber, &resultNumber);
 	temp = result;
 	result = temp - inB;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("sub:0x%s %ld - %ld = %ld\n", outBuffer, temp, inB, result);
+	printLPATestResult("sub", outBuffer, temp, "-", inB, result);
 
 	LPA_INT_subtract(&resultNumber, &bNumber, &resultNumber);
 	temp = result;
 	result = temp - inB;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("sub:0x%s %ld - %ld = %ld\n", outBuffer, temp, inB, result);
+	printLPATestResult("sub", outBuffer, temp, "-", inB, result);
 
 	LPA_INT_subtract(&aNumber, &resultNumber, &resultNumber);
 	temp = result;
 	result = inA - temp;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("sub:0x%s %ld - %ld = %ld\n", outBuffer, inA, temp, result);
+	printLPATestResult("sub", outBuffer, inA, "-", temp, result);
 
 	LPA_INT_subtract(&bNumber, &resultNumber, &resultNumber);
 	temp = result;
 	result = inB - temp;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("sub:0x%s %ld - %ld = %ld\n", outBuffer, inB, temp, result);
+	printLPATestResult("sub", outBuffer, inB, "-", temp, result);
 
 	LPA_INT_subtract(&resultNumber, &resultNumber, &resultNumber);
 	temp = result;
 	result = temp - temp;
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
-	printf("sub:0x%s %ld - %ld = %ld\n", outBuffer, temp, temp, result);
-#endif
+	printLPATestResult("sub", outBuffer, temp, "-", temp, result);
 
 	return 1;
 }

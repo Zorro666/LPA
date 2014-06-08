@@ -127,67 +127,63 @@ static void LPA_INT_addInternal(const LPA_INTnumber* const pA, const LPA_INTnumb
 	}
 }
 
-#if 0
 static void LPA_INT_subtractInternal(const LPA_INTnumber* const pA, const LPA_INTnumber* const pB, LPA_INTnumber* const pResult)
 {
 	LPA_INT_size i = 0;
-	const LPA_INT_size aMemSize = pA->memorySize;
-	const LPA_INT_size bMemSize = pB->memorySize;
+	const LPA_INT_size aNumDigits = pA->numDigits;
+	const LPA_INT_size bNumDigits = pB->numDigits;
 	/* sum length : extend if needed for the carry */
-	const LPA_INT_size sumSize = ((aMemSize > bMemSize) ? aMemSize : bMemSize);
-	LPA_INT_digit carry = 0;
+	const LPA_INT_size sumSize = ((aNumDigits > bNumDigits) ? aNumDigits : bNumDigits);
+	LPA_INT_digit borrow = 0;
 
 	LPA_INT_LOG("sumSize:%d\n", sumSize);
-	LPA_INTallocNumber(pResult, sumSize);
+	LPA_INT_allocNumber(pResult, sumSize);
 
 	for (i = 0; i < sumSize; ++i)
 	{
-		unsigned int j = 0;
-		
-		LPA_INT_digitIntermediate aDigit = 0;
-		LPA_INT_digitIntermediate bDigit = 0;
+		LPA_INT_digit aDigit = 0;
+		LPA_INT_digit bDigit = 0;
 		LPA_INT_digit sumDigit = 0;
 		LPA_INT_LOG("i:%d\n", i);
 
-		if (i < aMemSize)
+		if (i < aNumDigits)
 		{
 			aDigit = pA->pDigits[i];
 		}
-		if (i < bMemSize)
+		if (i < bNumDigits)
 		{
 			bDigit = pB->pDigits[i];
 		}
-		for (j = 0; j < 2; ++j)
+		/* digit add e.g. base precision arithmetic */
 		{
-			LPA_INT_digitIntermediate shift = (j << 2);
-			const LPA_INT_digitIntermediate aValue = (aDigit >> shift) & LPA_INT_DIGIT_MASK;
-			const LPA_INT_digitIntermediate bValue = (bDigit >> shift) & LPA_INT_DIGIT_MASK;
-			LPA_INT_digitIntermediate sumValue = aValue - bValue;
-			sumValue -= carry;
-			LPA_INT_LOG("j:%d carry:%u sumValue:%u aValue:%u bValue:%u\n", j, carry, sumValue, aValue, bValue);
+			const LPA_INT_digit aValue = aDigit;
+			const LPA_INT_digit bValue = bDigit;
+			LPA_INT_digit sumValue = aValue - borrow;
+			LPA_INT_LOG("borrow:%u sumValue:%X aValue:%X bValue:%X\n", borrow, sumValue, aValue, bValue);
 
-			if (sumValue > 9)
+			if (sumValue > borrow)
 			{
-				sumValue += 10;
-				carry = 1;
-				LPA_INT_LOG("j:%d 2 carry:%u sumValue:%u aValue:%u bValue:%u\n", j, carry, sumValue, aValue, bValue);
+				borrow = 1;
 			}
 			else
 			{
-				carry = 0;
+				borrow = 0;
 			}
-			sumDigit |= (LPA_INT_digit)(sumValue << shift);
+			sumValue -= bValue;
+			if (sumValue > bValue)
+			{
+				borrow = 1;
+			}
+			sumDigit = (LPA_INT_digit)sumValue;
 		}
 		pResult->pDigits[i] = sumDigit;
 	}
-	pResult->negative = 0;
-	/* if carry is set then this is a -ve number */
-	if (carry == 1)
+	/* Negative if borrow is set */
+	if (borrow == 1)
 	{
-		LPA_INTinvert(pResult);
+		/* TODO */
 	}
 }
-#endif
 
 /*
 
@@ -402,5 +398,6 @@ void LPA_INT_subtract(const LPA_INTnumber* const pA, const LPA_INTnumber* const 
 	{
 		return;
 	}
+	LPA_INT_subtractInternal(pA, pB, pResult);
 }
 
