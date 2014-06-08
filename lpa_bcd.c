@@ -159,9 +159,9 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 	LPA_BCD_size i = 0;
 	const LPA_BCD_size aNumDigits = pA->numDigits;
 	const LPA_BCD_size bNumDigits = pB->numDigits;
-	/* sum length : extend if needed for the carry */
+	/* sum length : extend if needed for the borrow */
 	const LPA_BCD_size sumSize = ((aNumDigits > bNumDigits) ? aNumDigits : bNumDigits);
-	LPA_BCD_digit carry = 0;
+	LPA_BCD_digit borrow = 0;
 
 	LPA_BCD_LOG("sumSize:%d\n", sumSize);
 	LPA_BCDallocNumber(pResult, sumSize);
@@ -189,26 +189,26 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue - bValue;
-			sumValue -= carry;
-			LPA_BCD_LOG("j:%d carry:%u sumValue:%u aValue:%u bValue:%u\n", j, carry, sumValue, aValue, bValue);
+			sumValue -= borrow;
+			LPA_BCD_LOG("j:%d borrow:%u sumValue:%u aValue:%u bValue:%u\n", j, borrow, sumValue, aValue, bValue);
 
 			if (sumValue > 9)
 			{
 				sumValue += 10;
-				carry = 1;
-				LPA_BCD_LOG("j:%d 2 carry:%u sumValue:%u aValue:%u bValue:%u\n", j, carry, sumValue, aValue, bValue);
+				borrow = 1;
+				LPA_BCD_LOG("j:%d 2 borrow:%u sumValue:%u aValue:%u bValue:%u\n", j, borrow, sumValue, aValue, bValue);
 			}
 			else
 			{
-				carry = 0;
+				borrow = 0;
 			}
 			sumDigit |= (LPA_BCD_digit)(sumValue << shift);
 		}
 		pResult->pDigits[i] = sumDigit;
 	}
 	pResult->negative = 0;
-	/* if carry is set then this is a -ve number */
-	if (carry == 1)
+	/* if borrow is set then this is a -ve number */
+	if (borrow == 1)
 	{
 		LPA_BCD_invert(pResult);
 	}
