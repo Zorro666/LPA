@@ -19,7 +19,7 @@ Binary coded decimal large precision arithmetic functions
 #define LPA_BCD_LOG if (0) LPA_LOG
 #endif 
 
-typedef LPA_uint32 LPA_BCD_digitIntermediate;
+typedef LPA_int32 LPA_BCD_digitIntermediate;
 
 /*
 
@@ -32,6 +32,7 @@ static void LPA_BCD_invert(LPA_BCD_number* const pNumber)
 	/* loop over the digits: (9-digit) for all digits except units digit which is (10-digit) */
 	LPA_BCD_size i;
 	const LPA_BCD_size maxLoop = pNumber->numDigits*2;
+	LPA_BCD_digitIntermediate carry = 1;
 
 	for (i = 0; i < maxLoop; i++)
 	{
@@ -40,12 +41,19 @@ static void LPA_BCD_invert(LPA_BCD_number* const pNumber)
 		unsigned int j = 0;
 		for (j = 0; j < 2; ++j)
 		{
-			const LPA_BCD_digitIntermediate shift = (j << 2);
-			const LPA_BCD_digitIntermediate value = (digit >> shift) & LPA_BCD_DIGIT_MASK;
+			const LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
+			const LPA_BCD_digitIntermediate value = (LPA_BCD_digitIntermediate)(digit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate outValue = 9 - value;
-			if ((i == 0) && (j == 0))
+
+			outValue += carry;
+			if (outValue > 9)
 			{
-				outValue++;
+				carry = 1;
+				outValue -= 10;
+			}
+			else
+			{
+				carry = 0;
 			}
 			LPA_BCD_LOG("i:%u j:%u value:%d outValue:%d\n", i, j, value, outValue);
 			outDigit |= (LPA_BCD_digit)(outValue << shift);
@@ -126,7 +134,7 @@ static void LPA_BCD_addInternal(const LPA_BCD_number* const pA, const LPA_BCD_nu
 		}
 		for (j = 0; j < 2; ++j)
 		{
-			LPA_BCD_digitIntermediate shift = (j << 2);
+			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue + bValue;
@@ -185,22 +193,28 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 		}
 		for (j = 0; j < 2; ++j)
 		{
-			LPA_BCD_digitIntermediate shift = (j << 2);
+			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue - bValue;
-			sumValue -= borrow;
+			sumValue = aValue - borrow;
 			LPA_BCD_LOG("j:%d borrow:%u sumValue:%u aValue:%u bValue:%u\n", j, borrow, sumValue, aValue, bValue);
 
-			if (sumValue > 9)
+			if (sumValue < 0)
 			{
-				sumValue += 10;
 				borrow = 1;
+				sumValue += 10;
 				LPA_BCD_LOG("j:%d 2 borrow:%u sumValue:%u aValue:%u bValue:%u\n", j, borrow, sumValue, aValue, bValue);
 			}
 			else
 			{
 				borrow = 0;
+			}
+			sumValue = sumValue - bValue;
+			if (sumValue < 0)
+			{
+				borrow = 1;
+				sumValue += 10;
 			}
 			sumDigit |= (LPA_BCD_digit)(sumValue << shift);
 		}
@@ -248,7 +262,7 @@ void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBu
 
 		for (j = 0; j < 2; ++j)
 		{
-			LPA_BCD_digitIntermediate shift = (j << 2);
+			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate value = (digit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_LOG("digit:0x%X shift:%d value:%u\n", digit, shift, value);
 			pBuffer[outIndex] = (char)('0' + value);
