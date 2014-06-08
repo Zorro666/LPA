@@ -17,7 +17,7 @@ void LPA_freeMem(void* pMem)
 
 #define CHAR_BUFFER_SIZE (2048)
 
-void printLPATestResult(const char* const name, const char* const lpaResult, long a, const char* const op, long b, long spResult)
+static void printLPATestResult(const char* const name, const char* const lpaResult, long a, const char* const op, long b, long spResult)
 {
 	printf("%s:\t0x%s 0x%lX %s 0x%lX = 0x%lX\n", name, lpaResult, a, op, b, spResult);
 }
@@ -25,7 +25,84 @@ void printLPATestResult(const char* const name, const char* const lpaResult, lon
 typedef void(LPA_BCD_func)(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
 typedef void(LPA_INT_func)(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
 
-int doLPATest(const char* const test, LPA_INT_func testFunc, const long a, const long b)
+static int doLPA_BCDTest(const char* const test, LPA_BCD_func testFunc, const long a, const long b)
+{
+	LPA_BCD_number lpaResult;
+	LPA_BCD_number lpaA;
+	LPA_BCD_number lpaB;
+	char resultTruth[CHAR_BUFFER_SIZE];
+	char outResult[CHAR_BUFFER_SIZE];
+	char outA[CHAR_BUFFER_SIZE];
+	char outB[CHAR_BUFFER_SIZE];
+	long result = 0;
+	int success = 1;
+
+	LPA_BCD_fromInt64(&lpaA, a);
+	LPA_BCD_fromInt64(&lpaB, b);
+
+	if (testFunc == LPA_BCD_add)
+	{
+		result = a + b;
+	}
+	else if (testFunc == LPA_BCD_subtract)
+	{
+		result = a - b;
+	}
+
+	testFunc(&lpaA, &lpaB, &lpaResult);
+
+	LPA_BCD_toDecimalASCII(&lpaA, outA, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(&lpaB, outB, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(&lpaResult, outResult, CHAR_BUFFER_SIZE);
+	if (0)
+	{
+		printf("%s:\tBCD: %s long: %ld BCD: %s %s %s = %s long: %ld %s %ld = %ld\n", 
+				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
+	}
+
+	sprintf(resultTruth, "%ld", result);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+	}
+	LPA_BCD_fromInt64(&lpaResult, result);
+	LPA_BCD_toDecimalASCII(&lpaResult, resultTruth, CHAR_BUFFER_SIZE);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+	}
+	if (success == 0)
+	{
+		fprintf(stderr, "%s:\tBCD: %s long: %ld\nBCD: %s %s %s = %s\nlong: %ld %s %ld = %ld\n", 
+				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
+	}
+	return success;
+}
+
+static int doLPA_BCDRandomTests(const int numTests)
+{
+	int success = 1;
+	int i = 0;
+
+	while ((i < numTests) && (success == 1))
+	{
+		long a = rand();
+		long b = rand();
+		
+		success = doLPA_BCDTest("+", LPA_BCD_add, a, b);
+		if (success == 0)
+		{
+			break;
+		}
+		success = doLPA_BCDTest("-", LPA_BCD_subtract, a, b);
+		++i;
+	}
+
+	return success;
+}
+
+static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const long a, const long b)
 {
 	LPA_INT_number lpaResult;
 	LPA_INT_number lpaA;
@@ -80,7 +157,7 @@ int doLPATest(const char* const test, LPA_INT_func testFunc, const long a, const
 	return success;
 }
 
-int doLPARandomTests(const int numTests)
+static int doLPA_INTRandomTests(const int numTests)
 {
 	int success = 1;
 	int i = 0;
@@ -90,21 +167,26 @@ int doLPARandomTests(const int numTests)
 		long a = rand();
 		long b = rand();
 		
-		success = doLPATest("+", LPA_INT_add, a, b);
+		success = doLPA_INTTest("+", LPA_INT_add, a, b);
+		if (success == 0)
+		{
+			break;
+		}
+
 		if (b > a)
 		{
 			long temp = a;
 			a = b;
 			b = temp;
 		}
-		success = doLPATest("-", LPA_INT_subtract, a, b);
+		success = doLPA_INTTest("-", LPA_INT_subtract, a, b);
 		++i;
 	}
 
 	return success;
 }
 
-int testBCD(const int argc, char** argv)
+static int testBCD(const int argc, char** argv)
 {
 	LPA_BCD_number testNumber;
 	LPA_BCD_number aNumber;
@@ -235,10 +317,12 @@ int testBCD(const int argc, char** argv)
 	LPA_BCD_toDecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printf("sub:%s %ld - %ld = %ld\n", outBuffer, temp, temp, result);
 
-	return 1;
+	doLPA_BCDTest("+", LPA_BCD_add, inA, inB);
+
+	return doLPA_BCDRandomTests(1000000);
 }
 
-int testINT(const int argc, char** argv)
+static int testINT(const int argc, char** argv)
 {
 	LPA_INT_number testNumber;
 	LPA_INT_number aNumber;
@@ -377,12 +461,10 @@ int testINT(const int argc, char** argv)
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printLPATestResult("sub", outBuffer, temp, "-", temp, result);
 
-	doLPATest("+", LPA_INT_add, inA, inB);
+	doLPA_INTTest("+", LPA_INT_add, inA, inB);
 
-	doLPARandomTests(1000000);
-	return 1;
+	return doLPA_INTRandomTests(1000000);
 }
-
 
 int main(const int argc, char** argv)
 {
@@ -394,12 +476,12 @@ int main(const int argc, char** argv)
 
 	if (testBCD(argc, argv) == 0)
 	{
-		fprintf(stderr, "BCD tests failed");
+		fprintf(stderr, "### BCD tests failed ###\n");
 		return -1;
 	}
 	if (testINT(argc, argv) == 0)
 	{
-		fprintf(stderr, "BCD tests failed");
+		fprintf(stderr, "### INT tests failed ###\n");
 		return -1;
 	}
 	return 0;
