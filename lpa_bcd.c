@@ -29,7 +29,7 @@ Private functions
 
 static void LPA_BCD_invert(LPA_BCD_number* const pNumber)
 {
-	/* loop over the digits: (9-digit) for all digits except units digit which is (10-digit) */
+	/* loop over the digits: 10^(n+1) - number */
 	LPA_BCD_size i;
 	const LPA_BCD_size maxLoop = pNumber->numDigits*2;
 	LPA_BCD_digitIntermediate carry = 1;
@@ -137,8 +137,7 @@ static void LPA_BCD_addInternal(const LPA_BCD_number* const pA, const LPA_BCD_nu
 			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
-			LPA_BCD_digitIntermediate sumValue = aValue + bValue;
-			sumValue += carry;
+			LPA_BCD_digitIntermediate sumValue = aValue + bValue + carry;
 			LPA_BCD_LOG("carry:%u sumValue:%u aValue:%u bValue:%u\n", carry, sumValue, aValue, bValue);
 
 			if (sumValue > 9)
@@ -196,8 +195,7 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
-			LPA_BCD_digitIntermediate sumValue = aValue - bValue;
-			sumValue = aValue - borrow;
+			LPA_BCD_digitIntermediate sumValue = aValue - bValue - borrow;
 			LPA_BCD_LOG("j:%d borrow:%u sumValue:%u aValue:%u bValue:%u\n", j, borrow, sumValue, aValue, bValue);
 
 			if (sumValue < 0)
@@ -209,12 +207,6 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 			else
 			{
 				borrow = 0;
-			}
-			sumValue = sumValue - bValue;
-			if (sumValue < 0)
-			{
-				borrow = 1;
-				sumValue += 10;
 			}
 			sumDigit |= (LPA_BCD_digit)(sumValue << shift);
 		}
