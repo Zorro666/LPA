@@ -29,7 +29,7 @@ Private functions
 
 */
 
-static void LPA_INT_extendNumber(LPA_INTnumber* const pNumber, const LPA_INT_size sizeIncrement)
+static void LPA_INT_extendNumber(LPA_INT_number* const pNumber, const LPA_INT_size sizeIncrement)
 {
 	if (pNumber == NULL)
 	{
@@ -51,7 +51,7 @@ static void LPA_INT_extendNumber(LPA_INTnumber* const pNumber, const LPA_INT_siz
 	}
 }
 
-static void LPA_INT_allocNumber(LPA_INTnumber* const pNumber, const LPA_INT_size newNumDigits)
+static void LPA_INT_allocNumber(LPA_INT_number* const pNumber, const LPA_INT_size newNumDigits)
 {
 	if (pNumber == NULL)
 	{
@@ -68,7 +68,7 @@ static void LPA_INT_allocNumber(LPA_INTnumber* const pNumber, const LPA_INT_size
 	}
 }
 
-static void LPA_INT_addInternal(const LPA_INTnumber* const pA, const LPA_INTnumber* const pB, LPA_INTnumber* const pResult)
+static void LPA_INT_addInternal(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult)
 {
 	LPA_INT_size i = 0;
 	const LPA_INT_size aNumDigits = pA->numDigits;
@@ -127,7 +127,7 @@ static void LPA_INT_addInternal(const LPA_INTnumber* const pA, const LPA_INTnumb
 	}
 }
 
-static void LPA_INT_subtractInternal(const LPA_INTnumber* const pA, const LPA_INTnumber* const pB, LPA_INTnumber* const pResult)
+static void LPA_INT_subtractInternal(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult)
 {
 	LPA_INT_size i = 0;
 	const LPA_INT_size aNumDigits = pA->numDigits;
@@ -191,13 +191,13 @@ Public functions
 
 */
 
-void LPA_INT_initNumber(LPA_INTnumber* const pNumber)
+void LPA_INT_initNumber(LPA_INT_number* const pNumber)
 {
 	pNumber->pDigits = NULL;
 	pNumber->numDigits = 0;
 }
 
-void LPA_INT_toHexadecimalASCII(const LPA_INTnumber* const pNumber, char* const pBuffer, const size_t maxNumChars)
+void LPA_INT_toHexadecimalASCII(const LPA_INT_number* const pNumber, char* const pBuffer, const size_t maxNumChars)
 {
 	LPA_INT_size i;
 	size_t outIndex = 0;
@@ -254,7 +254,7 @@ void LPA_INT_toHexadecimalASCII(const LPA_INTnumber* const pNumber, char* const 
 }
 
 /* Hexadecimal ASCII only */
-void LPA_INT_fromHexadecimalASCII(LPA_INTnumber* const pNumber, const char* const value)
+void LPA_INT_fromHexadecimalASCII(LPA_INT_number* const pNumber, const char* const value)
 {
 	const char* pEnd;
 	const char* pStr = value;
@@ -336,22 +336,22 @@ void LPA_INT_fromHexadecimalASCII(LPA_INTnumber* const pNumber, const char* cons
 	while (pStr != pEnd);
 }
 
-void LPA_INT_fromInt32(LPA_INTnumber* const pNumber, LPA_int32 value)
+void LPA_INT_fromInt32(LPA_INT_number* const pNumber, LPA_int32 value)
 {
 	LPA_INT_fromInt64(pNumber, (LPA_uint32)value);
 }
 
-void LPA_INT_fromInt64(LPA_INTnumber* const pNumber, LPA_int64 value)
+void LPA_INT_fromInt64(LPA_INT_number* const pNumber, LPA_int64 value)
 {
 	LPA_INT_fromUint64(pNumber, (LPA_uint64)value);
 }
 
-void LPA_INT_fromUint32(LPA_INTnumber* const pNumber, LPA_uint32 value)
+void LPA_INT_fromUint32(LPA_INT_number* const pNumber, LPA_uint32 value)
 {
 	LPA_INT_fromUint64(pNumber, (LPA_uint64)value);
 }
 
-void LPA_INT_fromUint64(LPA_INTnumber* const pNumber, LPA_uint64 value)
+void LPA_INT_fromUint64(LPA_INT_number* const pNumber, LPA_uint64 value)
 {
 	const LPA_INT_digit digit0 = value & LPA_INT_DIGIT_MASK;
 	const LPA_INT_digit digit1 = (LPA_INT_digit)(value >> LPA_INT_NUM_BITS_PER_DIGIT);
@@ -367,7 +367,7 @@ void LPA_INT_fromUint64(LPA_INTnumber* const pNumber, LPA_uint64 value)
 	}
 }
 
-void LPA_INT_add(const LPA_INTnumber* const pA, const LPA_INTnumber* const pB, LPA_INTnumber* const pResult)
+void LPA_INT_add(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult)
 {
 	if (pA == NULL)
 	{
@@ -384,7 +384,7 @@ void LPA_INT_add(const LPA_INTnumber* const pA, const LPA_INTnumber* const pB, L
 	LPA_INT_addInternal(pA, pB, pResult);
 }
 
-void LPA_INT_subtract(const LPA_INTnumber* const pA, const LPA_INTnumber* const pB, LPA_INTnumber* const pResult)
+void LPA_INT_subtract(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult)
 {
 	if (pA == NULL)
 	{

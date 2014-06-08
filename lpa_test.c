@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "lpa.h"
 
@@ -19,6 +20,88 @@ void LPA_freeMem(void* pMem)
 void printLPATestResult(const char* const name, const char* const lpaResult, long a, const char* const op, long b, long spResult)
 {
 	printf("%s:\t0x%s 0x%lX %s 0x%lX = 0x%lX\n", name, lpaResult, a, op, b, spResult);
+}
+
+typedef void(LPA_BCD_func)(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
+typedef void(LPA_INT_func)(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
+
+int doLPATest(const char* const test, LPA_INT_func testFunc, const long a, const long b)
+{
+	LPA_INT_number lpaResult;
+	LPA_INT_number lpaA;
+	LPA_INT_number lpaB;
+	char resultTruth[CHAR_BUFFER_SIZE];
+	char outResult[CHAR_BUFFER_SIZE];
+	char outA[CHAR_BUFFER_SIZE];
+	char outB[CHAR_BUFFER_SIZE];
+	long result = 0;
+	int success = 1;
+
+	LPA_INT_fromInt64(&lpaA, a);
+	LPA_INT_fromInt64(&lpaB, b);
+
+	if (testFunc == LPA_INT_add)
+	{
+		result = a + b;
+	}
+	else if (testFunc == LPA_INT_subtract)
+	{
+		result = a - b;
+	}
+
+	testFunc(&lpaA, &lpaB, &lpaResult);
+
+	LPA_INT_toHexadecimalASCII(&lpaA, outA, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(&lpaB, outB, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(&lpaResult, outResult, CHAR_BUFFER_SIZE);
+	if (0)
+	{
+		printf("%s:\tLPA: 0x%s long: 0x%lX LPA: 0x%s %s 0x%s = 0x%s long: 0x%lX %s 0x%lX = 0x%lX\n", 
+				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
+	}
+
+	sprintf(resultTruth, "%lX", result);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+	}
+	LPA_INT_fromInt64(&lpaResult, result);
+	LPA_INT_toHexadecimalASCII(&lpaResult, resultTruth, CHAR_BUFFER_SIZE);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+	}
+	if (success == 0)
+	{
+		fprintf(stderr, "%s:\tLPA: 0x%s long: 0x%lX\nLPA: 0x%s %s 0x%s = 0x%s\nlong: 0x%lX %s 0x%lX = 0x%lX\n", 
+				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
+		fprintf(stderr, "TEST FAILED '%s' : 0x%lX %s 0x%lX = 0x%s != 0x%s\n", test, a, test, b, resultTruth, outResult);
+	}
+	return success;
+}
+
+int doLPARandomTests(const int numTests)
+{
+	int success = 1;
+	int i = 0;
+
+	while ((i < numTests) && (success == 1))
+	{
+		long a = rand();
+		long b = rand();
+		
+		success = doLPATest("+", LPA_INT_add, a, b);
+		if (b > a)
+		{
+			long temp = a;
+			a = b;
+			b = temp;
+		}
+		success = doLPATest("-", LPA_INT_subtract, a, b);
+		++i;
+	}
+
+	return success;
 }
 
 int testBCD(const int argc, char** argv)
@@ -157,11 +240,11 @@ int testBCD(const int argc, char** argv)
 
 int testINT(const int argc, char** argv)
 {
-	LPA_INTnumber testNumber;
-	LPA_INTnumber aNumber;
-	LPA_INTnumber bNumber;
-	LPA_INTnumber resultNumber;
-	LPA_INTnumber tempNumber;
+	LPA_INT_number testNumber;
+	LPA_INT_number aNumber;
+	LPA_INT_number bNumber;
+	LPA_INT_number resultNumber;
+	LPA_INT_number tempNumber;
 	int inA32 = 166;
 	long inA = 166;
 	long inB = 166;
@@ -294,6 +377,9 @@ int testINT(const int argc, char** argv)
 	LPA_INT_toHexadecimalASCII(&resultNumber, outBuffer, CHAR_BUFFER_SIZE);
 	printLPATestResult("sub", outBuffer, temp, "-", temp, result);
 
+	doLPATest("+", LPA_INT_add, inA, inB);
+
+	doLPARandomTests(1000000);
 	return 1;
 }
 
