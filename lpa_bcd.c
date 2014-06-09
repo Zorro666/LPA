@@ -86,11 +86,11 @@ static void LPA_BCD_extendNumber(LPA_BCD_number* const pNumber, const LPA_BCD_si
 	}
 }
 
-static void LPA_BCDallocNumber(LPA_BCD_number* const pNumber, const LPA_BCD_size newNumDigits)
+static void LPA_BCD_allocNumber(LPA_BCD_number* const pNumber, const LPA_BCD_size newNumDigits)
 {
 	if (pNumber == NULL)
 	{
-		LPA_ERROR("LPA_BCDallocNumber::pNumber is NULL");
+		LPA_ERROR("LPA_BCD_allocNumber::pNumber is NULL");
 		return;
 	}
 	if (newNumDigits != pNumber->numDigits)
@@ -114,7 +114,7 @@ static void LPA_BCD_addInternal(const LPA_BCD_number* const pA, const LPA_BCD_nu
 	LPA_BCD_digit carry = 0;
 
 	LPA_BCD_LOG("sumSize:%d\n", sumSize);
-	LPA_BCDallocNumber(pResult, sumSize);
+	LPA_BCD_allocNumber(pResult, sumSize);
 
 	for (i = 0; i < sumSize; ++i)
 	{
@@ -172,7 +172,7 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 	LPA_BCD_digit borrow = 0;
 
 	LPA_BCD_LOG("sumSize:%d\n", sumSize);
-	LPA_BCDallocNumber(pResult, sumSize);
+	LPA_BCD_allocNumber(pResult, sumSize);
 
 	for (i = 0; i < sumSize; ++i)
 	{
@@ -229,8 +229,9 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 	/* multiply length : maximum length */
 	const LPA_BCD_size outNumDigits = (aNumDigits + bNumDigits);
 	LPA_BCD_digit carry = 0;
+	LPA_BCD_size outPosition = 0;
 
-	LPA_BCDallocNumber(pResult, outNumDigits);
+	LPA_BCD_allocNumber(pResult, outNumDigits);
 
 	for (i = 0; i < aNumDigits; ++i)
 	{
@@ -252,7 +253,7 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 			{
 				unsigned int jN = 0;
 				LPA_BCD_digitIntermediate bDigit = 0;
-				LPA_BCD_size outPosition = outPositionI;
+				outPosition = outPositionI;
 
 				if (j < bNumDigits)
 				{
@@ -295,6 +296,22 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 				}
 			}
 		}
+	}
+	if (carry > 0)
+	{
+		LPA_BCD_size outIndex;
+		int outNibble;
+		int outShift;
+		LPA_BCD_digit outNibbleMask;
+
+		outPosition++;
+		outIndex = outPosition >> 1;
+		outNibble = outPosition & 0x1;
+		outShift = (outNibble << 2);
+		outNibbleMask = (LPA_BCD_digit)(0xF0 >> outShift);
+
+		pResult->pDigits[outIndex] &= outNibbleMask;
+		pResult->pDigits[outIndex] |= (LPA_BCD_digit)(carry << outShift);
 	}
 }
 
