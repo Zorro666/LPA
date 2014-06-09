@@ -26,6 +26,7 @@ typedef struct LPA_BCD_number
 } LPA_BCD_number;
 
 void LPA_BCD_initNumber(LPA_BCD_number* const pNumber);
+void LPA_BCD_freeNumber(LPA_BCD_number* const pNumber);
 
 /* Do we need FromUint32 & FromUint64 etc., could we just have FromUint */
 void LPA_BCD_fromInt32(LPA_BCD_number* const pNumber, LPA_int32 value);
@@ -40,5 +41,6 @@ void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBu
 
 void LPA_BCD_add(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
 void LPA_BCD_subtract(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
+void LPA_BCD_multiply(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult);
 
 #endif

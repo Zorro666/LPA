@@ -31,7 +31,7 @@ static void LPA_BCD_invert(LPA_BCD_number* const pNumber)
 {
 	/* loop over the digits: 10^(n+1) - number */
 	LPA_BCD_size i;
-	const LPA_BCD_size maxLoop = pNumber->numDigits*2;
+	const LPA_BCD_size maxLoop = pNumber->numDigits;
 	LPA_BCD_digitIntermediate carry = 1;
 
 	for (i = 0; i < maxLoop; i++)
@@ -101,6 +101,7 @@ static void LPA_BCDallocNumber(LPA_BCD_number* const pNumber, const LPA_BCD_size
 		pNumber->numDigits = newNumDigits;
 		memset(pNumber->pDigits, 0, newMemorySize);
 	}
+	pNumber->negative = 0;
 }
 
 static void LPA_BCD_addInternal(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
@@ -134,7 +135,7 @@ static void LPA_BCD_addInternal(const LPA_BCD_number* const pA, const LPA_BCD_nu
 		}
 		for (j = 0; j < 2; ++j)
 		{
-			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
+			const LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue + bValue + carry;
@@ -192,7 +193,7 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 		}
 		for (j = 0; j < 2; ++j)
 		{
-			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
+			const LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			const LPA_BCD_digitIntermediate bValue = (bDigit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_digitIntermediate sumValue = aValue - bValue - borrow;
@@ -220,6 +221,83 @@ static void LPA_BCD_subtractInternal(const LPA_BCD_number* const pA, const LPA_B
 	}
 }
 
+static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
+{
+	LPA_BCD_size i = 0;
+	const LPA_BCD_size aNumDigits = pA->numDigits;
+	const LPA_BCD_size bNumDigits = pB->numDigits;
+	/* multiply length : maximum length */
+	const LPA_BCD_size outNumDigits = (aNumDigits + bNumDigits);
+	LPA_BCD_digit carry = 0;
+
+	LPA_BCDallocNumber(pResult, outNumDigits);
+
+	for (i = 0; i < aNumDigits; ++i)
+	{
+		unsigned int iN = 0;
+		LPA_BCD_digitIntermediate aDigit = 0;
+		LPA_BCD_size outPositionI = i * 2;
+
+		if (i < aNumDigits)
+		{
+			aDigit = pA->pDigits[i];
+		}
+		for (iN = 0; iN < 2; ++iN)
+		{
+			const LPA_BCD_digitIntermediate aShift = (LPA_BCD_digitIntermediate)(iN << 2);
+			const LPA_BCD_digitIntermediate aValue = (aDigit >> aShift) & LPA_BCD_DIGIT_MASK;
+			LPA_BCD_size j = 0;
+			outPositionI += iN;
+			for (j = 0; j < bNumDigits; ++j)
+			{
+				unsigned int jN = 0;
+				LPA_BCD_digitIntermediate bDigit = 0;
+				LPA_BCD_size outPosition = outPositionI;
+
+				if (j < bNumDigits)
+				{
+					bDigit = pB->pDigits[j];
+				}
+				outPosition += j * 2;
+				for (jN = 0; jN < 2; ++jN)
+				{
+					int outNibble;
+					LPA_BCD_digit result = 0;
+					LPA_BCD_digitIntermediate resultValue = 0;
+					const LPA_BCD_digitIntermediate bShift = (LPA_BCD_digitIntermediate)(jN << 2);
+					const LPA_BCD_digitIntermediate bValue = (bDigit >> bShift) & LPA_BCD_DIGIT_MASK;
+
+					LPA_BCD_digitIntermediate multValue = aValue * bValue + carry;
+					LPA_BCD_digitIntermediate units;
+					LPA_BCD_digit outNibbleMask;
+					int outShift;
+					LPA_BCD_size outIndex;
+
+					outPosition += jN;
+					outIndex = outPosition >> 1;
+					outNibble = outPosition & 0x1;
+					outShift = (outNibble << 2);
+					outNibbleMask = (LPA_BCD_digit)(0xF0 >> outShift);
+
+					result = pResult->pDigits[outIndex];
+					resultValue = (result >> outShift) & LPA_BCD_DIGIT_MASK;
+					multValue += resultValue;
+
+					units = multValue % 10;
+					carry = (LPA_BCD_digit)multValue / 10;
+					LPA_BCD_LOG("i:%d iN:%d j:%d jN:%d a:%d b:%d outIndex:%d outNibble:%d mult:%d units:%d carry:%d result:0x%X\n",
+												i, iN, j, jN, aValue, bValue, outIndex, outNibble, multValue, units, carry, pResult->pDigits[outIndex]);
+
+					pResult->pDigits[outIndex] &= outNibbleMask;
+					pResult->pDigits[outIndex] |= (LPA_BCD_digit)(units << outShift);
+
+					LPA_BCD_LOG("outNibbleMask:0x%X result:0x%X\n", outNibbleMask, pResult->pDigits[outIndex]);
+				}
+			}
+		}
+	}
+}
+
 /*
 
 Public functions
@@ -228,6 +306,14 @@ Public functions
 
 void LPA_BCD_initNumber(LPA_BCD_number* const pNumber)
 {
+	pNumber->pDigits = NULL;
+	pNumber->numDigits = 0;
+	pNumber->negative = 0;
+}
+
+void LPA_BCD_freeNumber(LPA_BCD_number* const pNumber)
+{
+	LPA_freeMem(pNumber->pDigits);
 	pNumber->pDigits = NULL;
 	pNumber->numDigits = 0;
 	pNumber->negative = 0;
@@ -254,7 +340,7 @@ void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBu
 
 		for (j = 0; j < 2; ++j)
 		{
-			LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
+			const LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate value = (digit >> shift) & LPA_BCD_DIGIT_MASK;
 			LPA_BCD_LOG("digit:0x%X shift:%d value:%u\n", digit, shift, value);
 			pBuffer[outIndex] = (char)('0' + value);
@@ -344,8 +430,7 @@ void LPA_BCD_fromDecimalASCII(LPA_BCD_number* const pNumber, const char* const v
 		LPA_BCD_digitIntermediate digit = (LPA_BCD_digitIntermediate)(c - '0');
 		if (digit > 9)
 		{
-			LPA_freeMem(pNumber->pDigits);
-			LPA_BCD_initNumber(pNumber);
+			LPA_BCD_freeNumber(pNumber);
 			return;
 		}
 		LPA_BCD_LOG("c:%c index:%d nibbleIndex:%d digit:%u\n", c, index, nibbleIndex, digit);
@@ -486,9 +571,45 @@ void LPA_BCD_subtract(const LPA_BCD_number* const pA, const LPA_BCD_number* cons
 	else if (pB->negative)
 	{
 		LPA_BCD_addInternal(pA, pB, pResult);
-		pResult->negative = 0;
 		return;
 	}
 	LPA_BCD_subtractInternal(pA, pB, pResult);
+}
+
+void LPA_BCD_multiply(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
+{
+	if (pA == NULL)
+	{
+		return;
+	}
+	if (pB == NULL)
+	{
+		return;
+	}
+	if (pResult == NULL)
+	{
+		return;
+	}
+	if (pA->negative)
+	{
+		if (pB->negative)
+		{
+			LPA_BCD_multiplyInternal(pA, pB, pResult);
+			return;
+		}
+		else
+		{
+			LPA_BCD_multiplyInternal(pA, pB, pResult);
+			pResult->negative = 1;
+			return;
+		}
+	}
+	else if (pB->negative)
+	{
+		LPA_BCD_multiplyInternal(pA, pB, pResult);
+		pResult->negative = 1;
+		return;
+	}
+	LPA_BCD_multiplyInternal(pA, pB, pResult);
 }
 
