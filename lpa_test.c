@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #include "lpa.h"
 
@@ -104,7 +105,19 @@ static int doLPA_BCDRandomTests(const long numTests)
 		{
 			break;
 		}
+
+		success = doLPA_BCDTest("*", LPA_BCD_multiply, a, b);
+		if (success == 0)
+		{
+			break;
+		}
+
 		success = doLPA_BCDTest("-", LPA_BCD_subtract, a, b);
+		if (success == 0)
+		{
+			break;
+		}
+
 		++i;
 	}
 
@@ -136,6 +149,10 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 	else if (testFunc == LPA_INT_subtract)
 	{
 		result = a - b;
+	}
+	else if (testFunc == LPA_INT_multiply)
+	{
+		result = a * b;
 	}
 
 	testFunc(&lpaA, &lpaB, &lpaResult);
@@ -190,6 +207,14 @@ static int doLPA_INTRandomTests(const long numTests)
 			break;
 		}
 
+		a = a % INT_MAX;
+		b = b % INT_MAX;
+		success = doLPA_INTTest("*", LPA_INT_multiply, a, b);
+		if (success == 0)
+		{
+			break;
+		}
+
 		if (b > a)
 		{
 			long temp = a;
@@ -197,6 +222,11 @@ static int doLPA_INTRandomTests(const long numTests)
 			b = temp;
 		}
 		success = doLPA_INTTest("-", LPA_INT_subtract, a, b);
+		if (success == 0)
+		{
+			break;
+		}
+
 		++i;
 	}
 
@@ -272,11 +302,15 @@ static int testBCD(const int argc, char** argv)
 	LPA_BCD_freeNumber(&resultNumber);
 	LPA_BCD_freeNumber(&tempNumber);
 
+	if (doLPA_BCDTest("+", LPA_BCD_add, inA, inB) == 0)
+	{
+		return 0;
+	}
 	if (doLPA_BCDTest("*", LPA_BCD_multiply, inA, inB) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_BCDTest("+", LPA_BCD_add, inA, inB) == 0)
+	if (doLPA_BCDTest("-", LPA_BCD_subtract, inA, inB) == 0)
 	{
 		return 0;
 	}
@@ -356,6 +390,14 @@ static int testINT(const int argc, char** argv)
 	LPA_INT_freeNumber(&tempNumber);
 
 	if (doLPA_INTTest("+", LPA_INT_add, inA, inB) == 0)
+	{
+		return 0;
+	}
+	if (doLPA_INTTest("*", LPA_INT_multiply, inA, inB) == 0)
+	{
+		return 0;
+	}
+	if (doLPA_INTTest("-", LPA_INT_subtract, inA, inB) == 0)
 	{
 		return 0;
 	}
