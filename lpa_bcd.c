@@ -326,6 +326,7 @@ void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBu
 	const LPA_BCD_size maxLoop = pNumber->numDigits;
 	LPA_BCD_digitIntermediate digit = 0;
 	size_t maxValidChar = 0;
+	int validNumber = 0;
 
 	if (maxLoop == 0)
 	{
@@ -347,6 +348,7 @@ void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBu
 			if (value > 0)
 			{
 				maxValidChar = outIndex;
+				validNumber = 1;
 			}
 			++outIndex;
 			if (outIndex == maxNumChars)
@@ -355,6 +357,11 @@ void LPA_BCD_toDecimalASCII(const LPA_BCD_number* const pNumber, char* const pBu
 				break;
 			}
 		}
+	}
+	if (validNumber == 0)
+	{
+		pBuffer[0] = '0';
+		maxValidChar = 0;
 	}
 	outIndex = maxValidChar+1;
 	if (pNumber->negative)
@@ -483,7 +490,7 @@ void LPA_BCD_fromUint64(LPA_BCD_number* const pNumber, LPA_uint64 value)
 
 	LPA_BCD_initNumber(pNumber);
 
-	while (workingValue != 0)
+	do
 	{
 		LPA_BCD_digitIntermediate digit = (LPA_BCD_digitIntermediate)(workingValue % 10);
 		LPA_BCD_LOG("workingValue:%lu index:%d nibbleIndex:%d digit:%u\n", workingValue, index, nibbleIndex, digit);
@@ -502,6 +509,7 @@ void LPA_BCD_fromUint64(LPA_BCD_number* const pNumber, LPA_uint64 value)
 
 		workingValue /= 10;
 	}
+	while (workingValue != 0);
 }
 
 void LPA_BCD_add(const LPA_BCD_number* const pA, const LPA_BCD_number* const pB, LPA_BCD_number* const pResult)
