@@ -1,11 +1,12 @@
 Short
-* Implement BCD multiply function
-* Test BCD multiply function
-* Need a test harness system and some auto-tests: sequential
-
-Medium
+* BCD sprintf doesn't print 0 for zero numbers
+* document about optimisation in BCD multiply e.g. lookup table
+* do tests using -ve numbers for BCD functions
 * Implement LPA multiply function
 * Test LPA multiply function
+
+Medium
+* Need a test harness system and some auto-tests: sequential
 
 Long
 * What to do about -ve numbers in LPA
