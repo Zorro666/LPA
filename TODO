@@ -1,7 +1,4 @@
 Short
-* BCD sprintf doesn't print 0 for zero numbers
-* document about optimisation in BCD multiply e.g. lookup table
-* do tests using -ve numbers for BCD functions
 * Implement LPA multiply function
 * Test LPA multiply function
 
