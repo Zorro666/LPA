@@ -197,6 +197,14 @@ void LPA_INT_initNumber(LPA_INT_number* const pNumber)
 	pNumber->numDigits = 0;
 }
 
+void LPA_INT_freeNumber(LPA_INT_number* const pNumber)
+{
+	LPA_freeMem(pNumber->pDigits);
+	pNumber->pDigits = NULL;
+	pNumber->numDigits = 0;
+}
+
+
 void LPA_INT_toHexadecimalASCII(const LPA_INT_number* const pNumber, char* const pBuffer, const size_t maxNumChars)
 {
 	LPA_INT_size i;

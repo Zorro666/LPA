@@ -19,6 +19,7 @@ typedef struct LPA_INT_number
 } LPA_INT_number;
 
 void LPA_INT_initNumber(LPA_INT_number* const pNumber);
+void LPA_INT_freeNumber(LPA_INT_number* const pNumber);
 
 /* Do we need FromUint32 & FromUint64 etc., could we just have FromUint */
 void LPA_INT_fromInt32(LPA_INT_number* const pNumber, LPA_int32 value);
