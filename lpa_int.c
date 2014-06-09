@@ -23,6 +23,7 @@ large precision arithmetic functions
 #define LPA_INT_NUM_CHARS_PER_DIGIT (LPA_INT_NUM_BITS_PER_DIGIT/LPA_INT_NUM_BITS_PER_CHAR)
 #define LPA_INT_DIGIT_MASK (~0u)
 
+typedef LPA_uint64 LPA_INT_digitIntermediate;
 /*
 
 Private functions
@@ -182,6 +183,60 @@ static void LPA_INT_subtractInternal(const LPA_INT_number* const pA, const LPA_I
 	if (borrow == 1)
 	{
 		/* TODO */
+	}
+}
+
+static void LPA_INT_multiplyInternal(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult)
+{
+	LPA_INT_size i = 0;
+	const LPA_INT_size aNumDigits = pA->numDigits;
+	const LPA_INT_size bNumDigits = pB->numDigits;
+	/* multiply length : maximum length */
+	const LPA_INT_size outNumDigits = (aNumDigits + bNumDigits);
+	LPA_INT_digit carry = 0;
+	LPA_INT_size outIndex = 0;
+
+	LPA_INT_allocNumber(pResult, outNumDigits);
+
+	for (i = 0; i < aNumDigits; ++i)
+	{
+		LPA_INT_digitIntermediate aValue = 0;
+		LPA_INT_size j = 0;
+
+		if (i < aNumDigits)
+		{
+			aValue = pA->pDigits[i];
+		}
+		for (j = 0; j < bNumDigits; ++j)
+		{
+			LPA_INT_digitIntermediate bValue = 0;
+			LPA_INT_digit result = 0;
+			LPA_INT_digitIntermediate multValue;
+			LPA_INT_digit units;
+
+			if (j < bNumDigits)
+			{
+				bValue = pB->pDigits[j];
+			}
+
+			multValue = aValue * bValue + carry;
+
+			outIndex = i + j;
+			result = pResult->pDigits[outIndex];
+			LPA_INT_LOG("i:%d j:%d ind:%d a:0x%lX b:0x%lX mult:0x%lX result:0x%X\n", 
+					i, j, outIndex, aValue, bValue, multValue, result);
+			multValue += result;
+
+			units = (LPA_INT_digit)(multValue & LPA_INT_DIGIT_MASK);
+			carry = (LPA_INT_digit)(multValue >> LPA_INT_NUM_BITS_PER_DIGIT);
+			pResult->pDigits[outIndex] = units;
+			LPA_INT_LOG("ind:%d units:0x%X carry:0x%X\n", outIndex, units, carry);
+		}
+	}
+	if (carry > 0)
+	{
+		outIndex++;
+		pResult->pDigits[outIndex] = carry;
 	}
 }
 
@@ -407,5 +462,22 @@ void LPA_INT_subtract(const LPA_INT_number* const pA, const LPA_INT_number* cons
 		return;
 	}
 	LPA_INT_subtractInternal(pA, pB, pResult);
+}
+
+void LPA_INT_multiply(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult)
+{
+	if (pA == NULL)
+	{
+		return;
+	}
+	if (pB == NULL)
+	{
+		return;
+	}
+	if (pResult == NULL)
+	{
+		return;
+	}
+	LPA_INT_multiplyInternal(pA, pB, pResult);
 }
 

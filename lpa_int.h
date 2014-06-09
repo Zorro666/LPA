@@ -34,5 +34,6 @@ void LPA_INT_toHexadecimalASCII(const LPA_INT_number* const pNumber, char* const
 
 void LPA_INT_add(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
 void LPA_INT_subtract(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
+void LPA_INT_multiply(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
 
 #endif
