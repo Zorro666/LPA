@@ -87,8 +87,8 @@ static int doLPA_BCDRandomTests(const int numTests)
 
 	while ((i < numTests) && (success == 1))
 	{
-		long a = rand();
-		long b = rand();
+		long a = rand() - (RAND_MAX >> 1);
+		long b = rand() - (RAND_MAX >> 1);
 		
 		success = doLPA_BCDTest("+", LPA_BCD_add, a, b);
 		if (success == 0)
