@@ -232,10 +232,7 @@ static void LPA_INT_multiplyInternal(const LPA_INT_number* const pA, const LPA_I
 			pResult->pDigits[outIndex] = units;
 			LPA_INT_LOG("ind:%d units:0x%X carry:0x%X\n", outIndex, units, carry);
 		}
-	}
-	if (carry > 0)
-	{
-		outIndex++;
+		++outIndex;
 		pResult->pDigits[outIndex] = carry;
 	}
 }
