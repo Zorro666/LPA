@@ -228,7 +228,6 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 	const LPA_BCD_size bNumDigits = pB->numDigits;
 	/* multiply length : maximum length */
 	const LPA_BCD_size outNumDigits = (aNumDigits + bNumDigits);
-	LPA_BCD_digit carry = 0;
 	LPA_BCD_size outPosition = 0;
 
 	LPA_BCD_allocNumber(pResult, outNumDigits);
@@ -247,7 +246,13 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 		{
 			const LPA_BCD_digitIntermediate aShift = (LPA_BCD_digitIntermediate)(iN << 2);
 			const LPA_BCD_digitIntermediate aValue = (aDigit >> aShift) & LPA_BCD_DIGIT_MASK;
+			LPA_BCD_digitIntermediate carry = 0;
+			LPA_BCD_digit outNibbleMask;
+			int outShift;
+			int outNibble;
+			LPA_BCD_size outIndex;
 			LPA_BCD_size j = 0;
+
 			outPositionI += iN;
 			for (j = 0; j < bNumDigits; ++j)
 			{
@@ -262,7 +267,6 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 				outPosition += j * 2;
 				for (jN = 0; jN < 2; ++jN)
 				{
-					int outNibble;
 					LPA_BCD_digit result = 0;
 					LPA_BCD_digitIntermediate resultValue = 0;
 					const LPA_BCD_digitIntermediate bShift = (LPA_BCD_digitIntermediate)(jN << 2);
@@ -270,9 +274,6 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 
 					LPA_BCD_digitIntermediate multValue = aValue * bValue + carry;
 					LPA_BCD_digitIntermediate units;
-					LPA_BCD_digit outNibbleMask;
-					int outShift;
-					LPA_BCD_size outIndex;
 
 					outPosition += jN;
 					outIndex = outPosition >> 1;
@@ -285,7 +286,7 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 					multValue += resultValue;
 
 					units = multValue % 10;
-					carry = (LPA_BCD_digit)multValue / 10;
+					carry = multValue / 10;
 					LPA_BCD_LOG("i:%d iN:%d j:%d jN:%d a:%d b:%d outIndex:%d outNibble:%d mult:%d units:%d carry:%d result:0x%X\n",
 												i, iN, j, jN, aValue, bValue, outIndex, outNibble, multValue, units, carry, pResult->pDigits[outIndex]);
 
@@ -295,23 +296,15 @@ static void LPA_BCD_multiplyInternal(const LPA_BCD_number* const pA, const LPA_B
 					LPA_BCD_LOG("outNibbleMask:0x%X result:0x%X\n", outNibbleMask, pResult->pDigits[outIndex]);
 				}
 			}
+			++outPosition;
+			outIndex = outPosition >> 1;
+			outNibble = outPosition & 0x1;
+			outShift = (outNibble << 2);
+			outNibbleMask = (LPA_BCD_digit)(0xF0 >> outShift);
+
+			pResult->pDigits[outIndex] &= outNibbleMask;
+			pResult->pDigits[outIndex] |= (LPA_BCD_digit)(carry << outShift);
 		}
-	}
-	if (carry > 0)
-	{
-		LPA_BCD_size outIndex;
-		int outNibble;
-		int outShift;
-		LPA_BCD_digit outNibbleMask;
-
-		outPosition++;
-		outIndex = outPosition >> 1;
-		outNibble = outPosition & 0x1;
-		outShift = (outNibble << 2);
-		outNibbleMask = (LPA_BCD_digit)(0xF0 >> outShift);
-
-		pResult->pDigits[outIndex] &= outNibbleMask;
-		pResult->pDigits[outIndex] |= (LPA_BCD_digit)(carry << outShift);
 	}
 }
 
