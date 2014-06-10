@@ -7,6 +7,9 @@ Medium
 * Implement LPA divide function
 * Test LPA divide function
 
+* Try out Karatsuba algorithm for multiply
+* Normalize inputs to remove if tests
+
 Long
 * Work out what other math functions are needed
 

@@ -9,7 +9,7 @@ large precision arithmetic functions
 
 #include "lpa_int.h"
 
-#define LPA_INT_DEBUG (1)
+#define LPA_INT_DEBUG (0)
 
 #if LPA_INT_DEBUG
 #define LPA_INT_LOG LPA_LOG
