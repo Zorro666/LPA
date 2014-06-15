@@ -506,10 +506,12 @@ static void LPA_BCD_singleDivide(LPA_BCD_number* const pQuotient, LPA_BCD_number
 		aPartial -= b * q;
 		--outIndex;
 	}
+	pQuotient->negative = 0;
 	LPA_BCD_fromInt32(&bWork, b);
 	LPA_BCD_initNumber(&temp1);
 	LPA_BCD_multiply(&temp1, pQuotient, &bWork);
 	LPA_BCD_subtract(pRemainder, pA, &temp1);
+	pRemainder->negative = 0;
 }
 
 static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_number* const pRemainder,
@@ -595,6 +597,7 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 
 	/* Awork = A * D : must always add a leading digit */
 	LPA_BCD_multiply(&aWork, pA, &D);
+	aWork.negative = 0;
 	LPA_BCD_toDecimalASCII(outBuffer, &aWork, 1024);
 	aWorkLen = LPA_BCD_length(&aWork);
 	LPA_BCD_LOG_DIVIDE("aWork:%s aSize:%d aWorkLen:%d\n", outBuffer, aSize, aWorkLen);
@@ -606,6 +609,7 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	}
 	/* Bwork = B * D */
 	LPA_BCD_multiply(&bWork, pB, &D);
+	bWork.negative = 0;
 	LPA_BCD_toDecimalASCII(outBuffer, &bWork, 1024);
 	LPA_BCD_LOG_DIVIDE("bWork:%s\n", outBuffer);
 
@@ -649,8 +653,8 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		LPA_BCD_LOG_DIVIDE("temp1: %s\n", outBuffer);
 
 		LPA_BCD_initNumber(&temp2);
-		LPA_BCD_LOG_DIVIDE("numTempDigits:%d\n", n+1);
-		if (n-jLoop <= n)
+		LPA_BCD_LOG_DIVIDE("numTempDigits:%d n:%d jLoop:%d\n", n+1, n, jLoop);
+		if (aSize-jLoop <= aSize)
 		{
 			LPA_BCD_allocNumber(&temp2, (n+1));
 			for (i = 0; i < (n+1); ++i)
@@ -661,6 +665,14 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 				LPA_BCD_LOG_DIVIDE("src[%d] temp2[%d]: %d\n", srcDigit, dstDigit, src);
 				LPA_BCD_setDigit(&temp2, dstDigit, src);
 			}
+		}
+		else
+		{
+			/* This an error */
+			LPA_ERROR("BCD divide: not enough digits for remainder\n");
+			LPA_BCD_zeroNumber(pQuotient);
+			LPA_BCD_zeroNumber(pRemainder);
+			return;
 		}
 		LPA_BCD_toDecimalASCII(outBuffer, &temp2, 1024);
 		LPA_BCD_LOG_DIVIDE("temp2: %s\n", outBuffer);
@@ -1051,6 +1063,8 @@ void LPA_BCD_divide(LPA_BCD_number* const pQuotient, LPA_BCD_number* const pRema
 		if (pB->negative)
 		{
 			LPA_BCD_divideInternal(pQuotient, pRemainder, pA, pB);
+			pRemainder->negative = 1;
+			LPA_BCD_correctNegative(pRemainder);
 			return;
 		}
 		else
@@ -1058,6 +1072,8 @@ void LPA_BCD_divide(LPA_BCD_number* const pQuotient, LPA_BCD_number* const pRema
 			LPA_BCD_divideInternal(pQuotient, pRemainder, pA, pB);
 			pQuotient->negative = 1;
 			LPA_BCD_correctNegative(pQuotient);
+			pRemainder->negative = 1;
+			LPA_BCD_correctNegative(pRemainder);
 			return;
 		}
 	}
