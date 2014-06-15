@@ -95,6 +95,10 @@ static void LPA_BCD_copyNumber(LPA_BCD_number* pDst, const LPA_BCD_number* const
 {
 	const LPA_BCD_size numDigits = pSrc->numDigits;
 	const LPA_BCD_size memorySize = numDigits * sizeof(LPA_BCD_digit);
+	if (pDst->pDigits != NULL)
+	{
+		LPA_freeMem(pDst->pDigits);
+	}
 	pDst->pDigits = LPA_allocMem(memorySize);
 	memcpy(pDst->pDigits, pSrc->pDigits, memorySize);
 	pDst->numDigits = numDigits;
@@ -512,6 +516,9 @@ static void LPA_BCD_singleDivide(LPA_BCD_number* const pQuotient, LPA_BCD_number
 	LPA_BCD_initNumber(&temp1);
 	LPA_BCD_multiply(&temp1, pQuotient, &bWork);
 	LPA_BCD_subtract(pRemainder, pA, &temp1);
+
+	LPA_BCD_freeNumber(&temp1);
+	LPA_BCD_freeNumber(&bWork);
 	pRemainder->negative = 0;
 }
 
@@ -588,7 +595,6 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	m = aSize - n;
 	mAllocSize = m + 1;
 	LPA_BCD_allocNumber(pQuotient, mAllocSize);
-	LPA_BCD_allocNumber(pRemainder, mAllocSize);
 
 	LPA_BCD_LOG_DIVIDE("m:%d n:%d\n", m, n);
 
@@ -658,6 +664,7 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 
 		/* if (Bwork[2] * qUnit > Awork[j] * 10 + Awork[j+1] - qUnit * Bwork[1] qUnit -=1 */
 		/* D4. Multiply & Subtract: Awork[j...j+n] = A[j...j+n] - Qunit * Bwork, save the borrow flag if Awork is -ve */
+		LPA_BCD_freeNumber(&qWork);
 		LPA_BCD_fromInt32(&qWork, qUnit);
 		LPA_BCD_multiply(&temp1, &bWork, &qWork);
 #if LPA_BCD_DEBUG_DIVIDE
@@ -693,7 +700,6 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		LPA_BCD_LOG_DIVIDE("temp2: %s\n", outBuffer);
 #endif
 
-		LPA_BCD_allocNumber(&temp3, (n+1));
 		LPA_BCD_subtract(&temp3, &temp2, &temp1);
 #if LPA_BCD_DEBUG_DIVIDE
 		LPA_BCD_toDecimalASCII(outBuffer, &temp3, 1024);
@@ -731,7 +737,6 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	}
 	while (jLoop <= m);
 	/* D8. Q = u/v, R = Awork[m+1..m+n]/D */
-	/* need a single precision divide */
 	LPA_BCD_singleDivide(pRemainder, &temp2, &aWork, (LPA_BCD_digit)spD);
 
 	LPA_BCD_freeNumber(&aWork);
