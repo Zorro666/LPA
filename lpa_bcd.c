@@ -240,6 +240,7 @@ static void LPA_BCD_extendNumber(LPA_BCD_number* const pNumber, const LPA_BCD_si
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
 		pNumber->numDigits = newNumDigits;
 		memcpy(pNumber->pDigits, pOldDigits, oldMemorySize);
+		memset(pNumber->pDigits+oldNumDigits, 0, newMemorySize-oldMemorySize);
 		LPA_freeMem((void*)pOldDigits);
 	}
 }
@@ -535,8 +536,12 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	LPA_BCD_number temp1;
 	LPA_BCD_number temp2;
 	LPA_BCD_number temp3;
+	LPA_BCD_digit bWorkNm1;
+	LPA_BCD_digit bWorkNm2;
 	long spD;
+#if LPA_BCD_DEBUG_DIVIDE
 	char outBuffer[1024];
+#endif
 
 	aSize = LPA_BCD_length(pA);
 	bSize = LPA_BCD_length(pB);
@@ -598,9 +603,12 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	/* Awork = A * D : must always add a leading digit */
 	LPA_BCD_multiply(&aWork, pA, &D);
 	aWork.negative = 0;
-	LPA_BCD_toDecimalASCII(outBuffer, &aWork, 1024);
 	aWorkLen = LPA_BCD_length(&aWork);
+
+#if LPA_BCD_DEBUG_DIVIDE
+	LPA_BCD_toDecimalASCII(outBuffer, &aWork, 1024);
 	LPA_BCD_LOG_DIVIDE("aWork:%s aSize:%d aWorkLen:%d\n", outBuffer, aSize, aWorkLen);
+#endif
 	if (LPA_BCD_length(pA) == aWorkLen)
 	{
 		LPA_BCD_LOG_DIVIDE("extend\n");
@@ -610,8 +618,15 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	/* Bwork = B * D */
 	LPA_BCD_multiply(&bWork, pB, &D);
 	bWork.negative = 0;
+#if LPA_BCD_DEBUG_DIVIDE
 	LPA_BCD_toDecimalASCII(outBuffer, &bWork, 1024);
 	LPA_BCD_LOG_DIVIDE("bWork:%s\n", outBuffer);
+#endif
+
+	LPA_BCD_freeNumber(&D);
+
+	bWorkNm1 = LPA_BCD_getDigit(&bWork, n-1);
+	bWorkNm2 = LPA_BCD_getDigit(&bWork, n-2);
 
 	jLoop = 0;
 	do
@@ -621,8 +636,6 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		LPA_BCD_digit aWorkJ = LPA_BCD_getDigit(&aWork, j);
 		LPA_BCD_digit aWorkJm1 = LPA_BCD_getDigit(&aWork, j-1);
 		LPA_BCD_digit aWorkJm2 = LPA_BCD_getDigit(&aWork, j-2);
-		LPA_BCD_digit bWorkNm1 = LPA_BCD_getDigit(&bWork, n-1);
-		LPA_BCD_digit bWorkNm2 = LPA_BCD_getDigit(&bWork, n-2);
 
 		LPA_BCD_LOG_DIVIDE("jLoop:%u j:%d aWorkJ:%d bWorkNm1:%d\n", jLoop, j, aWorkJ, bWorkNm1);
 		/* D3. Calculate Qunit: if Awork[j] == Bwork[1], Qunit = base - 1 else Qunit = (Awork[j] * base + Awork[j+1]) / Bwork[1] */
@@ -647,12 +660,13 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		/* D4. Multiply & Subtract: Awork[j...j+n] = A[j...j+n] - Qunit * Bwork, save the borrow flag if Awork is -ve */
 		LPA_BCD_fromInt32(&qWork, qUnit);
 		LPA_BCD_multiply(&temp1, &bWork, &qWork);
+#if LPA_BCD_DEBUG_DIVIDE
 		LPA_BCD_toDecimalASCII(outBuffer, &qWork, 1024);
 		LPA_BCD_LOG_DIVIDE("qWork: %s n:%d j:%d jLoop:%d n-j:%d\n", outBuffer, n, j, jLoop, n-j);
 		LPA_BCD_toDecimalASCII(outBuffer, &temp1, 1024);
 		LPA_BCD_LOG_DIVIDE("temp1: %s\n", outBuffer);
+#endif
 
-		LPA_BCD_initNumber(&temp2);
 		LPA_BCD_LOG_DIVIDE("numTempDigits:%d n:%d jLoop:%d\n", n+1, n, jLoop);
 		if (aSize-jLoop <= aSize)
 		{
@@ -674,22 +688,27 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 			LPA_BCD_zeroNumber(pRemainder);
 			return;
 		}
+#if LPA_BCD_DEBUG_DIVIDE
 		LPA_BCD_toDecimalASCII(outBuffer, &temp2, 1024);
 		LPA_BCD_LOG_DIVIDE("temp2: %s\n", outBuffer);
+#endif
 
-		LPA_BCD_initNumber(&temp3);
 		LPA_BCD_allocNumber(&temp3, (n+1));
 		LPA_BCD_subtract(&temp3, &temp2, &temp1);
+#if LPA_BCD_DEBUG_DIVIDE
 		LPA_BCD_toDecimalASCII(outBuffer, &temp3, 1024);
 		LPA_BCD_LOG_DIVIDE("temp3: %s\n", outBuffer);
+#endif
 		/* D5. if borrow flag then Q[j] -= 1 & invert Awork,  Awork = Awork + Bwork */
 		if (temp3.negative)
 		{
 			--qUnit;
 			LPA_BCD_add(&temp2, &temp3, &bWork);
 			LPA_BCD_copyNumber(&temp3, &temp2);
+#if LPA_BCD_DEBUG_DIVIDE
 			LPA_BCD_toDecimalASCII(outBuffer, &temp3, 1024);
 			LPA_BCD_LOG_DIVIDE("negative temp3: %s\n", outBuffer);
+#endif
 		}
 
 		for (i = 0; i < (n+1); ++i)
@@ -700,8 +719,10 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 			LPA_BCD_LOG_DIVIDE("src[%d] aWork[%d]: %d\n", srcDigit, dstDigit, src);
 			LPA_BCD_setDigit(&aWork, dstDigit, src);
 		}
+#if LPA_BCD_DEBUG_DIVIDE
 		LPA_BCD_toDecimalASCII(outBuffer, &aWork, 1024);
 		LPA_BCD_LOG_DIVIDE("aWork: %s\n", outBuffer);
+#endif
 
 		/* D6. Set Q[j] = Qunit */
 		LPA_BCD_LOG_DIVIDE("pQuotient[%d]: %d\n", mAllocSize - 1 - jLoop, qUnit);
@@ -712,6 +733,13 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	/* D8. Q = u/v, R = Awork[m+1..m+n]/D */
 	/* need a single precision divide */
 	LPA_BCD_singleDivide(pRemainder, &temp2, &aWork, (LPA_BCD_digit)spD);
+
+	LPA_BCD_freeNumber(&aWork);
+	LPA_BCD_freeNumber(&bWork);
+	LPA_BCD_freeNumber(&qWork);
+	LPA_BCD_freeNumber(&temp1);
+	LPA_BCD_freeNumber(&temp2);
+	LPA_BCD_freeNumber(&temp3);
 }
 
 /*

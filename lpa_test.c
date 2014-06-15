@@ -622,14 +622,14 @@ int main(const int argc, char** argv)
 		printf("argv[%d] '%s'\n", i, argv[i]);
 	}
 
-	if (testINT(argc, argv) == 0)
-	{
-		fprintf(stderr, "### INT tests failed ###\n");
-		return -1;
-	}
 	if (testBCD(argc, argv) == 0)
 	{
 		fprintf(stderr, "### BCD tests failed ###\n");
+		return -1;
+	}
+	if (testINT(argc, argv) == 0)
+	{
+		fprintf(stderr, "### INT tests failed ###\n");
 		return -1;
 	}
 	return 0;
