@@ -117,9 +117,6 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 	LPA_BCD_initNumber(&lpaA);
 	LPA_BCD_initNumber(&lpaB);
 
-	LPA_BCD_fromInt64(&lpaA, a);
-	LPA_BCD_fromInt64(&lpaB, b);
-
 	if (testFunc == LPA_BCD_divide)
 	{
 		if (b == 0)
@@ -129,6 +126,9 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 		result1 = a / b;
 		result2 = a % b;
 	}
+
+	LPA_BCD_fromInt64(&lpaA, a);
+	LPA_BCD_fromInt64(&lpaB, b);
 
 	testFunc(&lpaResult1, &lpaResult2, &lpaA, &lpaB);
 
