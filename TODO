@@ -1,14 +1,14 @@
 Short
-* Add and test -ve numbers with BCD divide
-
-Medium
-* Implement LPA create from ASCII (decimal)
-* Test LPA create from ASCII (decimal)
 * Implement LPA divide function
 * Test LPA divide function
 
+Medium
+* Work out what to optimise on BCD divide - it is horrible right now
+* Implement LPA create from ASCII (decimal)
+* Test LPA create from ASCII (decimal)
+
 * Try out Karatsuba algorithm for multiply
-* Normalize inputs to remove if tests
+* Normalize input sizes to remove if length tests
 
 Long
 * Work out what other math functions are needed
