@@ -17,13 +17,15 @@ void LPA_freeMem(void* pMem)
 	free(pMem);
 }
 
+typedef enum {TEST_RANDOM, TEST_SEQUENTIAL} TestMode;
+
 #define CHAR_BUFFER_SIZE (2048)
 
 typedef void(LPA_BCD_func1)(LPA_BCD_number* const pResult, const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
 typedef void(LPA_BCD_func2)(LPA_BCD_number* const pResult1, LPA_BCD_number* const pResult2, const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
 typedef void(LPA_INT_func)(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
 
-static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const long a, const long b)
+static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const long a, const long b, const int verbose)
 {
 	LPA_BCD_number lpaResult;
 	LPA_BCD_number lpaA;
@@ -61,7 +63,7 @@ static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const 
 	LPA_BCD_toDecimalASCII(outA, &lpaA, CHAR_BUFFER_SIZE);
 	LPA_BCD_toDecimalASCII(outB, &lpaB, CHAR_BUFFER_SIZE);
 	LPA_BCD_toDecimalASCII(outResult, &lpaResult, CHAR_BUFFER_SIZE);
-	if (0)
+	if (verbose)
 	{
 		printf("%s:\tBCD: %s long: %ld BCD: %s %s %s = %s long: %ld %s %ld = %ld\n", 
 				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
@@ -92,7 +94,8 @@ static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const 
 	return success;
 }
 
-static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_BCD_func2 testFunc, const long a, const long b)
+static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_BCD_func2 testFunc, 
+													const long a, const long b, const int verbose)
 {
 	LPA_BCD_number lpaResult1;
 	LPA_BCD_number lpaResult2;
@@ -133,7 +136,7 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 	LPA_BCD_toDecimalASCII(outB, &lpaB, CHAR_BUFFER_SIZE);
 	LPA_BCD_toDecimalASCII(outResult1, &lpaResult1, CHAR_BUFFER_SIZE);
 	LPA_BCD_toDecimalASCII(outResult2, &lpaResult2, CHAR_BUFFER_SIZE);
-	if (0)
+	if (verbose)
 	{
 		printf("%s:\tBCD: %s long: %ld BCD: %s %s %s = %s long: %ld %s %ld = %ld\n", 
 				test1, outResult1, result1, outA, test1, outB, outResult1, a, test1, b, result1);
@@ -159,7 +162,7 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test1, a, test1, b, result1Truth, outResult1);
 	}
 
-	if (0)
+	if (verbose)
 	{
 		printf("%s:\tBCD: %s long: %ld BCD: %s %s %s = %s long: %ld %s %ld = %ld\n", 
 				test2, outResult2, result2, outA, test2, outB, outResult2, a, test2, b, result2);
@@ -181,8 +184,8 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 	if (success2 == 0)
 	{
 		fprintf(stderr, "%s:\tBCD: %s long: %ld\nBCD: %s %s %s = %s\nlong: %ld %s %ld = %ld\n", 
-				test2, outResult2, result2, outA, test1, outB, outResult2, a, test2, b, result2);
-		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test2, a, test1, b, result2Truth, outResult2);
+				test2, outResult2, result2, outA, test2, outB, outResult2, a, test2, b, result2);
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test2, a, test2, b, result2Truth, outResult2);
 	}
 
 	LPA_BCD_freeNumber(&lpaResult1);
@@ -193,7 +196,7 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 	return success1 && success2;
 }
 
-static int doLPA_BCDTests(const long numTests, const int mode)
+static int doLPA_BCDTests(const long numTests, const TestMode mode)
 {
 	int success = 1;
 	long i = 0;
@@ -201,18 +204,20 @@ static int doLPA_BCDTests(const long numTests, const int mode)
 	long b = 0;
 	long maxValue = 0;
 
-	printf("numTests:%ld\n", numTests);
-	maxValue = (long)sqrt((float)numTests);
-	printf("maxValue:%ld\n", maxValue);
+	if (mode == TEST_SEQUENTIAL)
+	{
+		maxValue = (long)sqrt((float)numTests);
+		printf("maxValue:%ld\n", maxValue);
+	}
 
 	while ((i < numTests) && (success == 1))
 	{
-		if (mode == 0)
+		if (mode == TEST_RANDOM)
 		{
 			a = rand() - (RAND_MAX >> 1);
 			b = rand() - (RAND_MAX >> 1);
 		}
-		else if (mode == 0)
+		else if (mode == TEST_SEQUENTIAL)
 		{
 			b++;
 			if (b > maxValue)
@@ -222,32 +227,24 @@ static int doLPA_BCDTests(const long numTests, const int mode)
 			}
 		}
 		
-		success = doLPA_BCDTest1("+", LPA_BCD_add, a, b);
+		success = doLPA_BCDTest1("+", LPA_BCD_add, a, b, 0);
 		if (success == 0)
 		{
 			break;
 		}
 
-		success = doLPA_BCDTest1("*", LPA_BCD_multiply, a, b);
+		success = doLPA_BCDTest1("*", LPA_BCD_multiply, a, b, 0);
 		if (success == 0)
 		{
 			break;
 		}
 
-		success = doLPA_BCDTest1("-", LPA_BCD_subtract, a, b);
+		success = doLPA_BCDTest1("-", LPA_BCD_subtract, a, b, 0);
 		if (success == 0)
 		{
 			break;
 		}
-		if (a < 0)
-		{
-			a = -a;
-		}
-		if (b < 0)
-		{
-			b = -b;
-		}
-		success = doLPA_BCDTest2("/", "%", LPA_BCD_divide, a, b);
+		success = doLPA_BCDTest2("/", "%", LPA_BCD_divide, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -261,15 +258,17 @@ static int doLPA_BCDTests(const long numTests, const int mode)
 
 static int doLPA_BCDRandomTests(const long numTests)
 {
-	return doLPA_BCDTests(numTests, 0);
+	printf("################# BCD Random Tests : %lu #################\n", numTests);
+	return doLPA_BCDTests(numTests, TEST_RANDOM);
 }
 
 static int doLPA_BCDSequentialTests(const long numTests)
 {
-	return doLPA_BCDTests(numTests, 1);
+	printf("################# BCD Sequential Tests : %lu #################\n", numTests);
+	return doLPA_BCDTests(numTests, TEST_SEQUENTIAL);
 }
 
-static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const long a, const long b)
+static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const long a, const long b, const int verbose)
 {
 	LPA_INT_number lpaResult;
 	LPA_INT_number lpaA;
@@ -305,7 +304,7 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 	LPA_INT_toHexadecimalASCII(&lpaA, outA, CHAR_BUFFER_SIZE);
 	LPA_INT_toHexadecimalASCII(&lpaB, outB, CHAR_BUFFER_SIZE);
 	LPA_INT_toHexadecimalASCII(&lpaResult, outResult, CHAR_BUFFER_SIZE);
-	if (0)
+	if (verbose)
 	{
 		printf("%s:\tLPA: 0x%s long: 0x%lX LPA: 0x%s %s 0x%s = 0x%s long: 0x%lX %s 0x%lX = 0x%lX\n", 
 				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
@@ -336,17 +335,38 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 	return success;
 }
 
-static int doLPA_INTRandomTests(const long numTests)
+static int doLPA_INTTests(const long numTests, const TestMode mode)
 {
 	int success = 1;
 	long i = 0;
+	long a = 0;
+	long b = 0;
+	long maxValue = 0;
+
+	if (mode == TEST_SEQUENTIAL)
+	{
+		maxValue = (long)sqrt((float)numTests);
+		printf("maxValue:%ld\n", maxValue);
+	}
 
 	while ((i < numTests) && (success == 1))
 	{
-		long a = rand();
-		long b = rand();
+		if (mode == TEST_RANDOM)
+		{
+			a = rand();
+			b = rand();
+		}
+		else if (mode == TEST_SEQUENTIAL)
+		{
+			b++;
+			if (b > maxValue)
+			{
+				a++;
+				b = 0;
+			}
+		}
 		
-		success = doLPA_INTTest("+", LPA_INT_add, a, b);
+		success = doLPA_INTTest("+", LPA_INT_add, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -354,7 +374,7 @@ static int doLPA_INTRandomTests(const long numTests)
 
 		a = a % INT_MAX;
 		b = b % INT_MAX;
-		success = doLPA_INTTest("*", LPA_INT_multiply, a, b);
+		success = doLPA_INTTest("*", LPA_INT_multiply, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -366,7 +386,7 @@ static int doLPA_INTRandomTests(const long numTests)
 			a = b;
 			b = temp;
 		}
-		success = doLPA_INTTest("-", LPA_INT_subtract, a, b);
+		success = doLPA_INTTest("-", LPA_INT_subtract, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -376,6 +396,18 @@ static int doLPA_INTRandomTests(const long numTests)
 	}
 
 	return success;
+}
+
+static int doLPA_INTRandomTests(const long numTests)
+{
+	printf("################# INT Random Tests : %lu #################\n", numTests);
+	return doLPA_INTTests(numTests, TEST_RANDOM);
+}
+
+static int doLPA_INTSequentialTests(const long numTests)
+{
+	printf("################# INT Sequential Tests : %lu #################\n", numTests);
+	return doLPA_INTTests(numTests, TEST_SEQUENTIAL);
 }
 
 static int testBCD(const int argc, char** argv)
@@ -447,19 +479,19 @@ static int testBCD(const int argc, char** argv)
 	LPA_BCD_freeNumber(&resultNumber);
 	LPA_BCD_freeNumber(&tempNumber);
 
-	if (doLPA_BCDTest1("+", LPA_BCD_add, inA, inB) == 0)
+	if (doLPA_BCDTest1("+", LPA_BCD_add, inA, inB, 1) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_BCDTest1("*", LPA_BCD_multiply, inA, inB) == 0)
+	if (doLPA_BCDTest1("*", LPA_BCD_multiply, inA, inB, 1) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_BCDTest1("-", LPA_BCD_subtract, inA, inB) == 0)
+	if (doLPA_BCDTest1("-", LPA_BCD_subtract, inA, inB, 1) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_BCDTest2("/", "%", LPA_BCD_divide, inA, inB) == 0)
+	if (doLPA_BCDTest2("/", "%", LPA_BCD_divide, inA, inB, 1) == 0)
 	{
 		return 0;
 	}
@@ -469,12 +501,14 @@ static int testBCD(const int argc, char** argv)
 		fprintf(stderr, "#### Sequential Tests Failed ####\n");
 		return 0;
 	}
+	printf("#### Passed ####\n");
 
 	if (doLPA_BCDRandomTests(numTests) == 0)
 	{
 		fprintf(stderr, "#### Random Tests Failed ####\n");
 		return 0;
 	}
+	printf("#### Passed ####\n");
 
 	return 1;
 }
@@ -550,20 +584,34 @@ static int testINT(const int argc, char** argv)
 	LPA_INT_freeNumber(&resultNumber);
 	LPA_INT_freeNumber(&tempNumber);
 
-	if (doLPA_INTTest("+", LPA_INT_add, inA, inB) == 0)
+	if (doLPA_INTTest("+", LPA_INT_add, inA, inB, 0) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_INTTest("*", LPA_INT_multiply, inA, inB) == 0)
+	if (doLPA_INTTest("*", LPA_INT_multiply, inA, inB, 0) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_INTTest("-", LPA_INT_subtract, inA, inB) == 0)
+	if (doLPA_INTTest("-", LPA_INT_subtract, inA, inB, 0) == 0)
 	{
 		return 0;
 	}
 
-	return doLPA_INTRandomTests(numTests);
+	if (doLPA_INTSequentialTests(numTests) == 0)
+	{
+		fprintf(stderr, "#### Sequential Tests Failed ####\n");
+		return 0;
+	}
+	printf("#### Passed ####\n");
+
+	if (doLPA_INTRandomTests(numTests) == 0)
+	{
+		fprintf(stderr, "#### Random Tests Failed ####\n");
+		return 0;
+	}
+	printf("#### Passed ####\n");
+
+	return 1;
 }
 
 int main(const int argc, char** argv)
