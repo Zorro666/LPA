@@ -21,7 +21,7 @@ Negative numbers handled as a sign flag and storing the absolute value
 typedef struct LPA_BCD_number
 {
 	LPA_BCD_digit* pDigits; /* each LPA_BCD_digit is 2 decimal numbers */
-	LPA_BCD_size numDigits;
+	LPA_BCD_size numDigits; /* could store the number of decimal digits instead/as well */
 	int negative;
 } LPA_BCD_number;
 

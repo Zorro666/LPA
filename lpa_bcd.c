@@ -486,6 +486,74 @@ static void LPA_BCD_multiplyInternal(LPA_BCD_number* const pResult, const LPA_BC
 	}
 }
 
+static void LPA_BCD_singleMultiply(LPA_BCD_number* const pResult, const LPA_BCD_number* const pA, const LPA_BCD_digit b)
+{
+	LPA_BCD_size i = 0;
+	const LPA_BCD_size aNumDigits = pA->numDigits;
+	const LPA_BCD_size bNumDigits = 1;
+	/* multiply length : maximum length */
+	const LPA_BCD_size outNumDigits = (aNumDigits + bNumDigits);
+	const	LPA_BCD_digitIntermediate bValue = (LPA_BCD_digitIntermediate)b;
+	LPA_BCD_size outPosition = 0;
+
+	if (aNumDigits == 0)
+	{
+		LPA_BCD_zeroNumber(pResult);
+		return;
+	}
+
+	LPA_BCD_allocNumber(pResult, outNumDigits);
+
+	for (i = 0; i < aNumDigits; ++i)
+	{
+		unsigned int iN = 0;
+		LPA_BCD_digitIntermediate aDigit = 0;
+
+		if (i < aNumDigits)
+		{
+			aDigit = pA->pDigits[i];
+		}
+		for (iN = 0; iN < 2; ++iN)
+		{
+			const LPA_BCD_digitIntermediate aShift = (LPA_BCD_digitIntermediate)(iN << 2);
+			const LPA_BCD_digitIntermediate aValue = (aDigit >> aShift) & LPA_BCD_DIGIT_MASK;
+			LPA_BCD_digitIntermediate carry = 0;
+			LPA_BCD_digit outNibbleMask;
+			int outShift;
+			int outNibble;
+			LPA_BCD_size outIndex;
+			LPA_BCD_digit result = 0;
+			LPA_BCD_digitIntermediate resultValue = 0;
+			LPA_BCD_digitIntermediate multValue = aValue * bValue + carry;
+			LPA_BCD_digitIntermediate units;
+
+			outIndex = outPosition >> 1;
+			outNibble = outPosition & 0x1;
+			outShift = (outNibble << 2);
+			outNibbleMask = (LPA_BCD_digit)(0xF0 >> outShift);
+
+			result = pResult->pDigits[outIndex];
+			resultValue = (result >> outShift) & LPA_BCD_DIGIT_MASK;
+			multValue += resultValue;
+
+			units = multValue % 10;
+			carry = multValue / 10;
+
+			pResult->pDigits[outIndex] &= outNibbleMask;
+			pResult->pDigits[outIndex] |= (LPA_BCD_digit)(units << outShift);
+
+			++outPosition;
+			outIndex = outPosition >> 1;
+			outNibble = outPosition & 0x1;
+			outShift = (outNibble << 2);
+			outNibbleMask = (LPA_BCD_digit)(0xF0 >> outShift);
+
+			pResult->pDigits[outIndex] &= outNibbleMask;
+			pResult->pDigits[outIndex] |= (LPA_BCD_digit)(carry << outShift);
+		}
+	}
+}
+
 static void LPA_BCD_singleDivide(LPA_BCD_number* const pQuotient, LPA_BCD_number* const pRemainder, 
 																	const LPA_BCD_number* const pA, const LPA_BCD_digit b)
 {
@@ -522,6 +590,8 @@ static void LPA_BCD_singleDivide(LPA_BCD_number* const pQuotient, LPA_BCD_number
 	pRemainder->negative = 0;
 }
 
+/* This function isn't optimised - intended to be used a function to compute reference results for other LPA functions */
+/* Packing data into nibbles makes this function more complex because of use of getDigit, setDigit */
 static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_number* const pRemainder,
 																		const LPA_BCD_number* const pA, const LPA_BCD_number* const pB)
 {
@@ -536,10 +606,8 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	LPA_BCD_size n;
 	LPA_BCD_size aWorkLen;
 	LPA_BCD_digitIntermediate B1;
-	LPA_BCD_number D;
 	LPA_BCD_number aWork;
 	LPA_BCD_number bWork;
-	LPA_BCD_number qWork;
 	LPA_BCD_number temp1;
 	LPA_BCD_number temp2;
 	LPA_BCD_number temp3;
@@ -581,10 +649,8 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		return;
 	}
 
-	LPA_BCD_initNumber(&D);
 	LPA_BCD_initNumber(&aWork);
 	LPA_BCD_initNumber(&bWork);
-	LPA_BCD_initNumber(&qWork);
 	LPA_BCD_initNumber(&temp1);
 	LPA_BCD_initNumber(&temp2);
 	LPA_BCD_initNumber(&temp3);
@@ -602,12 +668,12 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	/* D can be arbitrary as long as B[1]*D >= base/2 e.g. D can made into a power of 2 for power of 2 bases */
 	B1 = LPA_BCD_getDigit(pB, n-1);
 	spD = 10 / (B1 + 1);
-	LPA_BCD_fromInt64(&D, spD);
+	LPA_BCD_fromInt64(&temp1, spD);
 
 	LPA_BCD_LOG_DIVIDE("B1:%d spD:%ld\n", B1, spD);
 
 	/* Awork = A * D : must always add a leading digit */
-	LPA_BCD_multiply(&aWork, pA, &D);
+	LPA_BCD_multiply(&aWork, pA, &temp1);
 	aWork.negative = 0;
 	aWorkLen = LPA_BCD_length(&aWork);
 
@@ -622,17 +688,19 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		aWorkLen++;
 	}
 	/* Bwork = B * D */
-	LPA_BCD_multiply(&bWork, pB, &D);
+	LPA_BCD_multiply(&bWork, pB, &temp1);
 	bWork.negative = 0;
 #if LPA_BCD_DEBUG_DIVIDE
 	LPA_BCD_toDecimalASCII(outBuffer, &bWork, 1024);
 	LPA_BCD_LOG_DIVIDE("bWork:%s\n", outBuffer);
 #endif
 
-	LPA_BCD_freeNumber(&D);
+	LPA_BCD_freeNumber(&temp1);
 
 	bWorkNm1 = LPA_BCD_getDigit(&bWork, n-1);
 	bWorkNm2 = LPA_BCD_getDigit(&bWork, n-2);
+
+	LPA_BCD_allocNumber(&temp2, (n+1));
 
 	jLoop = 0;
 	do
@@ -664,12 +732,9 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 
 		/* if (Bwork[2] * qUnit > Awork[j] * 10 + Awork[j+1] - qUnit * Bwork[1] qUnit -=1 */
 		/* D4. Multiply & Subtract: Awork[j...j+n] = A[j...j+n] - Qunit * Bwork, save the borrow flag if Awork is -ve */
-		LPA_BCD_freeNumber(&qWork);
-		LPA_BCD_fromInt32(&qWork, qUnit);
-		LPA_BCD_multiply(&temp1, &bWork, &qWork);
+		LPA_BCD_singleMultiply(&temp1, &bWork, (LPA_BCD_digit)qUnit);
 #if LPA_BCD_DEBUG_DIVIDE
-		LPA_BCD_toDecimalASCII(outBuffer, &qWork, 1024);
-		LPA_BCD_LOG_DIVIDE("qWork: %s n:%d j:%d jLoop:%d n-j:%d\n", outBuffer, n, j, jLoop, n-j);
+		LPA_BCD_LOG_DIVIDE("qUnit: %d n:%d j:%d jLoop:%d n-j:%d\n", qUnit, n, j, jLoop, n-j);
 		LPA_BCD_toDecimalASCII(outBuffer, &temp1, 1024);
 		LPA_BCD_LOG_DIVIDE("temp1: %s\n", outBuffer);
 #endif
@@ -677,7 +742,6 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 		LPA_BCD_LOG_DIVIDE("numTempDigits:%d n:%d jLoop:%d\n", n+1, n, jLoop);
 		if (aSize-jLoop <= aSize)
 		{
-			LPA_BCD_allocNumber(&temp2, (n+1));
 			for (i = 0; i < (n+1); ++i)
 			{
 				LPA_BCD_size dstDigit = n-i;
@@ -741,7 +805,6 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 
 	LPA_BCD_freeNumber(&aWork);
 	LPA_BCD_freeNumber(&bWork);
-	LPA_BCD_freeNumber(&qWork);
 	LPA_BCD_freeNumber(&temp1);
 	LPA_BCD_freeNumber(&temp2);
 	LPA_BCD_freeNumber(&temp3);
