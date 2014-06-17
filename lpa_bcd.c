@@ -11,7 +11,7 @@ Binary coded decimal large precision arithmetic functions
 
 #define LPA_BCD_DIGIT_MASK (0xF)
 
-#define LPA_BCD_DEBUG (1)
+#define LPA_BCD_DEBUG (0)
 
 #define LPA_BCD_DEBUG_ADD (0)
 #define LPA_BCD_DEBUG_SUBTRACT (0)
@@ -120,7 +120,7 @@ static LPA_BCD_size LPA_BCD_length(const LPA_BCD_number* const pNumber)
 		{
 			const LPA_BCD_digitIntermediate shift = (LPA_BCD_digitIntermediate)(j << 2);
 			const LPA_BCD_digitIntermediate value = (LPA_BCD_digitIntermediate)(digit >> shift) & LPA_BCD_DIGIT_MASK;
-			index += 1;
+			++index;
 			LPA_BCD_LOG_LENGTH("digit[%d:%d]:0x%X shift:%d value:%d index:%d\n", i, j, digit, shift, value, index);
 			if (value != 0)
 			{
@@ -613,7 +613,7 @@ static void LPA_BCD_divideInternal(LPA_BCD_number* const pQuotient, LPA_BCD_numb
 	LPA_BCD_number temp3;
 	LPA_BCD_digit bWorkNm1;
 	LPA_BCD_digit bWorkNm2;
-	long spD;
+	LPA_int64 spD;
 #if LPA_BCD_DEBUG_DIVIDE
 	char outBuffer[1024];
 #endif

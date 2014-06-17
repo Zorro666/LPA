@@ -30,10 +30,12 @@ void LPA_INT_fromUint64(LPA_INT_number* const pNumber, LPA_uint64 value);
 /* Hexadecimal ASCII only (signed) */
 void LPA_INT_fromHexadecimalASCII(LPA_INT_number* const pNumber, const char* const value);
 
-void LPA_INT_toHexadecimalASCII(const LPA_INT_number* const pNumber, char* const pBuffer, const size_t maxNumChars);
+void LPA_INT_toHexadecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_INT_number* const pNumber);
 
-void LPA_INT_add(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
-void LPA_INT_subtract(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
-void LPA_INT_multiply(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
+void LPA_INT_add(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);
+void LPA_INT_subtract(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);
+void LPA_INT_multiply(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);
+void LPA_INT_divide(LPA_INT_number* const pQuotient, LPA_INT_number* const pRemainder,
+										const LPA_INT_number* const pA, const LPA_INT_number* const pB);
 
 #endif

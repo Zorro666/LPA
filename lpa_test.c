@@ -22,8 +22,12 @@ typedef enum {TEST_RANDOM, TEST_SEQUENTIAL} TestMode;
 #define CHAR_BUFFER_SIZE (2048)
 
 typedef void(LPA_BCD_func1)(LPA_BCD_number* const pResult, const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
-typedef void(LPA_BCD_func2)(LPA_BCD_number* const pResult1, LPA_BCD_number* const pResult2, const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
-typedef void(LPA_INT_func)(const LPA_INT_number* const pA, const LPA_INT_number* const pB, LPA_INT_number* const pResult);
+typedef void(LPA_BCD_func2)(LPA_BCD_number* const pResult1, LPA_BCD_number* const pResult2, 
+														const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
+
+typedef void(LPA_INT_func1)(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);
+typedef void(LPA_INT_func2)(LPA_INT_number* const pResult1, LPA_INT_number* const pResult2,
+														const LPA_INT_number* const pA, const LPA_INT_number* const pB);
 
 static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const long a, const long b, const int verbose)
 {
@@ -43,7 +47,6 @@ static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const 
 
 	LPA_BCD_fromInt64(&lpaA, a);
 	LPA_BCD_fromInt64(&lpaB, b);
-	LPA_BCD_initNumber(&lpaResult);
 
 	if (testFunc == LPA_BCD_add)
 	{
@@ -268,7 +271,7 @@ static int doLPA_BCDSequentialTests(const long numTests)
 	return doLPA_BCDTests(numTests, TEST_SEQUENTIAL);
 }
 
-static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const long a, const long b, const int verbose)
+static int doLPA_INTTest1(const char* const test, LPA_INT_func1 testFunc, const long a, const long b, const int verbose)
 {
 	LPA_INT_number lpaResult;
 	LPA_INT_number lpaA;
@@ -283,6 +286,7 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 	LPA_INT_initNumber(&lpaResult);
 	LPA_INT_initNumber(&lpaA);
 	LPA_INT_initNumber(&lpaB);
+
 	LPA_INT_fromInt64(&lpaA, a);
 	LPA_INT_fromInt64(&lpaB, b);
 
@@ -299,11 +303,11 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 		result = a * b;
 	}
 
-	testFunc(&lpaA, &lpaB, &lpaResult);
+	testFunc(&lpaResult, &lpaA, &lpaB);
 
-	LPA_INT_toHexadecimalASCII(&lpaA, outA, CHAR_BUFFER_SIZE);
-	LPA_INT_toHexadecimalASCII(&lpaB, outB, CHAR_BUFFER_SIZE);
-	LPA_INT_toHexadecimalASCII(&lpaResult, outResult, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(outA, CHAR_BUFFER_SIZE, &lpaA);
+	LPA_INT_toHexadecimalASCII(outB, CHAR_BUFFER_SIZE, &lpaB);
+	LPA_INT_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
 	if (verbose)
 	{
 		printf("%s:\tLPA: 0x%s long: 0x%lX LPA: 0x%s %s 0x%s = 0x%s long: 0x%lX %s 0x%lX = 0x%lX\n", 
@@ -317,7 +321,7 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 	}
 	LPA_INT_freeNumber(&lpaResult);
 	LPA_INT_fromInt64(&lpaResult, result);
-	LPA_INT_toHexadecimalASCII(&lpaResult, resultTruth, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(resultTruth, CHAR_BUFFER_SIZE, &lpaResult);
 	if (strcmp(resultTruth, outResult) != 0)
 	{
 		success = 0;
@@ -333,6 +337,101 @@ static int doLPA_INTTest(const char* const test, LPA_INT_func testFunc, const lo
 	LPA_INT_freeNumber(&lpaA);
 	LPA_INT_freeNumber(&lpaB);
 	return success;
+}
+
+static int doLPA_INTTest2(const char* const test1, const char* const test2, LPA_INT_func2 testFunc, 
+													const long a, const long b, const int verbose)
+{
+	LPA_INT_number lpaResult1;
+	LPA_INT_number lpaResult2;
+	LPA_INT_number lpaA;
+	LPA_INT_number lpaB;
+	char resultTruth[CHAR_BUFFER_SIZE];
+	char outResult[CHAR_BUFFER_SIZE];
+	char outA[CHAR_BUFFER_SIZE];
+	char outB[CHAR_BUFFER_SIZE];
+	long result1 = 0;
+	long result2 = 0;
+	int success1 = 1;
+	int success2 = 1;
+
+	LPA_INT_initNumber(&lpaResult1);
+	LPA_INT_initNumber(&lpaResult2);
+	LPA_INT_initNumber(&lpaA);
+	LPA_INT_initNumber(&lpaB);
+
+	LPA_INT_fromInt64(&lpaA, a);
+	LPA_INT_fromInt64(&lpaB, b);
+
+	if (testFunc == LPA_INT_divide)
+	{
+		result1 = a / b;
+		result2 = a % b;
+	}
+
+	testFunc(&lpaResult1, &lpaResult2, &lpaA, &lpaB);
+
+	LPA_INT_toHexadecimalASCII(outA, CHAR_BUFFER_SIZE, &lpaA);
+	LPA_INT_toHexadecimalASCII(outB, CHAR_BUFFER_SIZE, &lpaB);
+
+	LPA_INT_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult1);
+	if (verbose)
+	{
+		printf("%s:\tLPA: 0x%s long: 0x%lX LPA: 0x%s %s 0x%s = 0x%s long: 0x%lX %s 0x%lX = 0x%lX\n", 
+				test1, outResult, result1, outA, test1, outB, outResult, a, test1, b, result1);
+	}
+
+	sprintf(resultTruth, "%lX", result1);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success1 = 0;
+	}
+	LPA_INT_freeNumber(&lpaResult1);
+	LPA_INT_fromInt64(&lpaResult1, result1);
+	LPA_INT_toHexadecimalASCII(resultTruth, CHAR_BUFFER_SIZE, &lpaResult1);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success1 = 0;
+	}
+	if (success1 == 0)
+	{
+		fprintf(stderr, "%s:\tLPA: 0x%s long: 0x%lX\nLPA: 0x%s %s 0x%s = 0x%s\nlong: 0x%lX %s 0x%lX = 0x%lX\n", 
+				test1, outResult, result1, outA, test1, outB, outResult, a, test1, b, result1);
+		fprintf(stderr, "TEST FAILED '%s' : 0x%lX %s 0x%lX = 0x%s != 0x%s\n", test1, a, test1, b, resultTruth, outResult);
+	}
+
+	LPA_INT_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult2);
+	if (verbose)
+	{
+		printf("%s:\tLPA: 0x%s long: 0x%lX LPA: 0x%s %s 0x%s = 0x%s long: 0x%lX %s 0x%lX = 0x%lX\n", 
+				test2, outResult, result2, outA, test2, outB, outResult, a, test2, b, result2);
+	}
+
+	sprintf(resultTruth, "%lX", result2);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success2 = 0;
+	}
+	LPA_INT_freeNumber(&lpaResult2);
+	LPA_INT_fromInt64(&lpaResult2, result2);
+	LPA_INT_toHexadecimalASCII(resultTruth, CHAR_BUFFER_SIZE, &lpaResult2);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success2 = 0;
+	}
+	if (success2 == 0)
+	{
+		fprintf(stderr, "%s:\tLPA: 0x%s long: 0x%lX\nLPA: 0x%s %s 0x%s = 0x%s\nlong: 0x%lX %s 0x%lX = 0x%lX\n", 
+				test2, outResult, result2, outA, test2, outB, outResult, a, test2, b, result2);
+		fprintf(stderr, "TEST FAILED '%s' : 0x%lX %s 0x%lX = 0x%s != 0x%s\n", test2, a, test2, b, resultTruth, outResult);
+	}
+
+	LPA_INT_freeNumber(&lpaResult1);
+	LPA_INT_freeNumber(&lpaResult2);
+	LPA_INT_freeNumber(&lpaA);
+	LPA_INT_freeNumber(&lpaB);
+
+	return success1 && success2;
 }
 
 static int doLPA_INTTests(const long numTests, const TestMode mode)
@@ -366,7 +465,7 @@ static int doLPA_INTTests(const long numTests, const TestMode mode)
 			}
 		}
 		
-		success = doLPA_INTTest("+", LPA_INT_add, a, b, 0);
+		success = doLPA_INTTest1("+", LPA_INT_add, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -374,7 +473,7 @@ static int doLPA_INTTests(const long numTests, const TestMode mode)
 
 		a = a % INT_MAX;
 		b = b % INT_MAX;
-		success = doLPA_INTTest("*", LPA_INT_multiply, a, b, 0);
+		success = doLPA_INTTest1("*", LPA_INT_multiply, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -386,7 +485,7 @@ static int doLPA_INTTests(const long numTests, const TestMode mode)
 			a = b;
 			b = temp;
 		}
-		success = doLPA_INTTest("-", LPA_INT_subtract, a, b, 0);
+		success = doLPA_INTTest1("-", LPA_INT_subtract, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -548,27 +647,27 @@ static int testINT(const int argc, char** argv)
 	LPA_INT_fromInt64(&aNumber, inA);
 	printf("numDigits:%u\n", aNumber.numDigits);
 
-	LPA_INT_toHexadecimalASCII(&aNumber, outBuffer, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &aNumber);
 	printf("in:%ld\n", inA);
 	printf("out:0x%s\n", outBuffer);
 
 	LPA_INT_freeNumber(&testNumber);
 	LPA_INT_fromHexadecimalASCII(&testNumber, "100");
-	LPA_INT_toHexadecimalASCII(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 	printf("'%s' outASCII:0x%s %d 0x%X\n", "100", outBuffer, testNumber.numDigits, testNumber.pDigits[0]);
 
 	if (argc > 1)
 	{
 		LPA_INT_freeNumber(&testNumber);
 		LPA_INT_fromHexadecimalASCII(&testNumber, argv[1]);
-		LPA_INT_toHexadecimalASCII(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 		printf("'%s' %ld 0x%lX outASCII:0x%s %d 0x%X\n", argv[1], inA, (unsigned long)inA, outBuffer, testNumber.numDigits, testNumber.pDigits[0]);
 	}
 	if (argc > 2)
 	{
 		LPA_INT_freeNumber(&testNumber);
 		LPA_INT_fromHexadecimalASCII(&testNumber, argv[2]);
-		LPA_INT_toHexadecimalASCII(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 		printf("'%s' %ld 0x%lX outASCII:0x%s %d 0x%X\n", argv[2], inB, (unsigned long)inB, outBuffer, testNumber.numDigits, testNumber.pDigits[0]);
 	}
 
@@ -576,7 +675,7 @@ static int testINT(const int argc, char** argv)
 	LPA_INT_freeNumber(&testNumber);
 	LPA_INT_fromInt32(&testNumber, inA32);
 	result = inA;
-	LPA_INT_toHexadecimalASCII(&testNumber, outBuffer, CHAR_BUFFER_SIZE);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 	printf("out a32:\t0x%s 0x%lX %d 0x%X\n", outBuffer, (unsigned long)result, testNumber.numDigits, testNumber.pDigits[0]);
 
 	LPA_INT_freeNumber(&testNumber);
@@ -584,15 +683,19 @@ static int testINT(const int argc, char** argv)
 	LPA_INT_freeNumber(&resultNumber);
 	LPA_INT_freeNumber(&tempNumber);
 
-	if (doLPA_INTTest("+", LPA_INT_add, inA, inB, 0) == 0)
+	if (doLPA_INTTest1("+", LPA_INT_add, inA, inB, 0) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_INTTest("*", LPA_INT_multiply, inA, inB, 0) == 0)
+	if (doLPA_INTTest1("*", LPA_INT_multiply, inA, inB, 0) == 0)
 	{
 		return 0;
 	}
-	if (doLPA_INTTest("-", LPA_INT_subtract, inA, inB, 0) == 0)
+	if (doLPA_INTTest1("-", LPA_INT_subtract, inA, inB, 0) == 0)
+	{
+		return 0;
+	}
+	if (doLPA_INTTest2("/", "%", LPA_INT_divide, inA, inB, 1) == 0)
 	{
 		return 0;
 	}
