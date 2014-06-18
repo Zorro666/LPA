@@ -29,6 +29,18 @@ typedef void(LPA_INT_func1)(LPA_INT_number* const pResult, const LPA_INT_number*
 typedef void(LPA_INT_func2)(LPA_INT_number* const pResult1, LPA_INT_number* const pResult2,
 														const LPA_INT_number* const pA, const LPA_INT_number* const pB);
 
+static void LPA_INT_multiplyDivide(LPA_INT_number* const pQuotient, LPA_INT_number* const pRemainder,
+																		const LPA_INT_number* const pA, const LPA_INT_number* const pB)
+{
+	LPA_INT_number temp1;
+	LPA_INT_initNumber(&temp1);
+
+	LPA_INT_multiply(&temp1, pA, pB);
+	LPA_INT_divide(pQuotient, pRemainder, &temp1, pB);
+
+	LPA_INT_freeNumber(&temp1);
+}
+
 static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const long a, const long b, const int verbose)
 {
 	LPA_BCD_number lpaResult;
@@ -365,8 +377,21 @@ static int doLPA_INTTest2(const char* const test1, const char* const test2, LPA_
 
 	if (testFunc == LPA_INT_divide)
 	{
+		if (b == 0)
+		{
+			return 1;
+		}
 		result1 = a / b;
 		result2 = a % b;
+	}
+	if (testFunc == LPA_INT_multiplyDivide)
+	{
+		if (b == 0)
+		{
+			return 1;
+		}
+		result1 = a;
+		result2 = 0;
 	}
 
 	testFunc(&lpaResult1, &lpaResult2, &lpaA, &lpaB);
@@ -486,6 +511,16 @@ static int doLPA_INTTests(const long numTests, const TestMode mode)
 			b = temp;
 		}
 		success = doLPA_INTTest1("-", LPA_INT_subtract, a, b, 0);
+		if (success == 0)
+		{
+			break;
+		}
+		success = doLPA_INTTest2("/", "%", LPA_INT_divide, a, b, 0);
+		if (success == 0)
+		{
+			break;
+		}
+		success = doLPA_INTTest2("*//", "*/%", LPA_INT_multiplyDivide, a, b, 0);
 		if (success == 0)
 		{
 			break;
@@ -696,6 +731,10 @@ static int testINT(const int argc, char** argv)
 		return 0;
 	}
 	if (doLPA_INTTest2("/", "%", LPA_INT_divide, inA, inB, 1) == 0)
+	{
+		return 0;
+	}
+	if (doLPA_INTTest2("*/:/", "*/:%", LPA_INT_multiplyDivide, inA, inB, 1) == 0)
 	{
 		return 0;
 	}
