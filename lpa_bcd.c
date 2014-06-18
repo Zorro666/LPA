@@ -394,7 +394,6 @@ static void LPA_BCD_multiplyInternal(LPA_BCD_number* const pResult, const LPA_BC
 	const LPA_BCD_size bNumDigits = pB->numDigits;
 	/* multiply length : maximum length */
 	const LPA_BCD_size outNumDigits = (aNumDigits + bNumDigits);
-	LPA_BCD_size outPosition = 0;
 
 	if (aNumDigits == 0)
 	{
@@ -411,6 +410,7 @@ static void LPA_BCD_multiplyInternal(LPA_BCD_number* const pResult, const LPA_BC
 
 	for (i = 0; i < aNumDigits; ++i)
 	{
+		LPA_BCD_size outPosition = 0;
 		unsigned int iN = 0;
 		LPA_BCD_digitIntermediate aDigit = 0;
 		LPA_BCD_size outPositionI = i * 2;
@@ -569,15 +569,14 @@ static void LPA_BCD_singleDivide(LPA_BCD_number* const pQuotient, LPA_BCD_number
 	LPA_BCD_initNumber(pQuotient);
 	LPA_BCD_allocNumber(pQuotient, aSize);
 	outIndex = aSize - 1;
-	for (jLoop = 0; jLoop < aSize; ++jLoop)
+	for (jLoop = 0; jLoop < aSize; ++jLoop, --outIndex)
 	{
-		LPA_BCD_size j = aSize -jLoop - 1;
+		LPA_BCD_size j = outIndex;
 		LPA_BCD_digit aJ = LPA_BCD_getDigit(pA, j);
 		aPartial = aPartial * 10 + aJ;
 		q = aPartial / b;
 		LPA_BCD_setDigit(pQuotient, outIndex, (LPA_BCD_digit)q);
 		aPartial -= b * q;
-		--outIndex;
 	}
 	pQuotient->negative = 0;
 	LPA_BCD_fromInt32(&bWork, b);
