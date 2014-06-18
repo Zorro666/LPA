@@ -309,13 +309,13 @@ static void LPA_INT_multiplyInternal(const LPA_INT_number* const pA, const LPA_I
 	const LPA_INT_size bNumDigits = pB->numDigits;
 	/* multiply length : maximum length */
 	const LPA_INT_size outNumDigits = (aNumDigits + bNumDigits);
-	LPA_INT_digit carry = 0;
-	LPA_INT_size outIndex = 0;
 
 	LPA_INT_allocNumber(pResult, outNumDigits);
 
 	for (i = 0; i < aNumDigits; ++i)
 	{
+		LPA_INT_size outIndex = 0;
+		LPA_INT_digit carry = 0;
 		LPA_INT_digitIntermediate aValue = 0;
 		LPA_INT_size j = 0;
 
@@ -348,8 +348,7 @@ static void LPA_INT_multiplyInternal(const LPA_INT_number* const pA, const LPA_I
 			pResult->pDigits[outIndex] = units;
 			LPA_INT_LOG_MULTIPLY("ind:%d units:0x%X carry:0x%X\n", outIndex, units, carry);
 		}
-		++outIndex;
-		pResult->pDigits[outIndex] = carry;
+		pResult->pDigits[outIndex+1] = carry;
 	}
 }
 
@@ -400,24 +399,36 @@ static void LPA_INT_singleDivide(LPA_INT_number* const pQuotient, LPA_INT_number
 	LPA_INT_digitIntermediate aPartial = 0;
 	LPA_INT_number temp1;
 	LPA_INT_number bWork;
+#if LPA_INT_DEBUG_DIVIDE
+	char outBuffer[1024];
+#endif
 
 	aSize = LPA_INT_length(pA);
 	LPA_INT_initNumber(pQuotient);
 	LPA_INT_allocNumber(pQuotient, aSize);
 	outIndex = aSize - 1;
-	for (jLoop = 0; jLoop < aSize; ++jLoop)
+	for (jLoop = 0; jLoop < aSize; ++jLoop, --outIndex)
 	{
-		LPA_INT_size j = aSize -jLoop - 1;
+		LPA_INT_size j = outIndex;
 		LPA_INT_digit aJ = pA->pDigits[j];
 		aPartial = (aPartial << 32ul) + aJ;
 		q = aPartial / b;
 		pQuotient->pDigits[outIndex] = (LPA_INT_digit)q;
 		aPartial -= (b * q);
-		--outIndex;
 	}
 	LPA_INT_fromInt64(&bWork, b);
 	LPA_INT_initNumber(&temp1);
 	LPA_INT_multiply(&temp1, pQuotient, &bWork);
+#if LPA_INT_DEBUG_DIVIDE
+	LPA_INT_toHexadecimalASCII(outBuffer, 1024, pA);
+	LPA_INT_LOG_DIVIDE("Single pA:0x%s\n", outBuffer);
+	LPA_INT_toHexadecimalASCII(outBuffer, 1024, &bWork);
+	LPA_INT_LOG_DIVIDE("Single pB:0x%s\n", outBuffer);
+	LPA_INT_toHexadecimalASCII(outBuffer, 1024, pQuotient);
+	LPA_INT_LOG_DIVIDE("Single pQuotient:0x%s\n", outBuffer);
+	LPA_INT_toHexadecimalASCII(outBuffer, 1024, &temp1);
+	LPA_INT_LOG_DIVIDE("Single temp1:0x%s\n", outBuffer);
+#endif
 	LPA_INT_subtract(pRemainder, pA, &temp1);
 
 	LPA_INT_freeNumber(&temp1);
