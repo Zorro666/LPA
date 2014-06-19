@@ -30,6 +30,7 @@ void LPA_INT_fromUint64(LPA_INT_number* const pNumber, LPA_uint64 value);
 /* Hexadecimal ASCII only (signed) */
 void LPA_INT_fromHexadecimalASCII(LPA_INT_number* const pNumber, const char* const value);
 
+void LPA_INT_toDecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_INT_number* const pNumber);
 void LPA_INT_toHexadecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_INT_number* const pNumber);
 
 void LPA_INT_add(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);

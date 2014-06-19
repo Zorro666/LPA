@@ -9,7 +9,9 @@ large precision arithmetic functions
 
 #include "lpa_int.h"
 
-#define LPA_INT_DEBUG (1)
+#define LPA_INT_DEBUG (0)
+
+#define CHAR_BUFFER_SIZE (1024)
 
 #if LPA_INT_DEBUG
 #define LPA_INT_LOG LPA_LOG
@@ -20,7 +22,7 @@ large precision arithmetic functions
 #define LPA_INT_DEBUG_ADD (0)
 #define LPA_INT_DEBUG_SUBTRACT (0)
 #define LPA_INT_DEBUG_MULTIPLY (0)
-#define LPA_INT_DEBUG_DIVIDE (1)
+#define LPA_INT_DEBUG_DIVIDE (0)
 #define LPA_INT_DEBUG_LENGTH (0)
 #define LPA_INT_DEBUG_INVERT (0)
 #define LPA_INT_DEBUG_TOHEX (0)
@@ -400,7 +402,7 @@ static void LPA_INT_singleDivide(LPA_INT_number* const pQuotient, LPA_INT_number
 	LPA_INT_number temp1;
 	LPA_INT_number bWork;
 #if LPA_INT_DEBUG_DIVIDE
-	char outBuffer[1024];
+	char outBuffer[CHAR_BUFFER_SIZE];
 #endif
 
 	aSize = LPA_INT_length(pA);
@@ -420,13 +422,13 @@ static void LPA_INT_singleDivide(LPA_INT_number* const pQuotient, LPA_INT_number
 	LPA_INT_initNumber(&temp1);
 	LPA_INT_multiply(&temp1, pQuotient, &bWork);
 #if LPA_INT_DEBUG_DIVIDE
-	LPA_INT_toHexadecimalASCII(outBuffer, 1024, pA);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, pA);
 	LPA_INT_LOG_DIVIDE("Single pA:0x%s\n", outBuffer);
-	LPA_INT_toHexadecimalASCII(outBuffer, 1024, &bWork);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &bWork);
 	LPA_INT_LOG_DIVIDE("Single pB:0x%s\n", outBuffer);
-	LPA_INT_toHexadecimalASCII(outBuffer, 1024, pQuotient);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, pQuotient);
 	LPA_INT_LOG_DIVIDE("Single pQuotient:0x%s\n", outBuffer);
-	LPA_INT_toHexadecimalASCII(outBuffer, 1024, &temp1);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &temp1);
 	LPA_INT_LOG_DIVIDE("Single temp1:0x%s\n", outBuffer);
 #endif
 	LPA_INT_subtract(pRemainder, pA, &temp1);
@@ -459,7 +461,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	LPA_INT_digitIntermediate bWorkNm2;
 	LPA_int64 spD;
 #if LPA_INT_DEBUG_DIVIDE
-	char outBuffer[1024];
+	char outBuffer[CHAR_BUFFER_SIZE];
 #endif
 
 	aSize = LPA_INT_length(pA);
@@ -521,7 +523,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	aWorkLen = LPA_INT_length(&aWork);
 
 #if LPA_INT_DEBUG_DIVIDE
-	LPA_INT_toHexadecimalASCII(outBuffer, 1024, &aWork);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &aWork);
 	LPA_INT_LOG_DIVIDE("aWork:%s aSize:%d aWorkLen:%d\n", outBuffer, aSize, aWorkLen);
 #endif
 	if (LPA_INT_length(pA) == aWorkLen)
@@ -533,7 +535,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	/* Bwork = B * D */
 	LPA_INT_multiply(&bWork, pB, &temp1);
 #if LPA_INT_DEBUG_DIVIDE
-	LPA_INT_toHexadecimalASCII(outBuffer, 1024, &bWork);
+	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &bWork);
 	LPA_INT_LOG_DIVIDE("bWork:%s\n", outBuffer);
 #endif
 
@@ -577,7 +579,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 		LPA_INT_singleMultiply(&temp1, &bWork, (LPA_INT_digit)qUnit);
 #if LPA_INT_DEBUG_DIVIDE
 		LPA_INT_LOG_DIVIDE("qUnit: 0x%lX n:%d j:%d jLoop:%d n-j:%d\n", qUnit, n, j, jLoop, n-j);
-		LPA_INT_toHexadecimalASCII(outBuffer, 1024, &temp1);
+		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &temp1);
 		LPA_INT_LOG_DIVIDE("temp1: %s\n", outBuffer);
 #endif
 
@@ -602,13 +604,13 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 			return;
 		}
 #if LPA_INT_DEBUG_DIVIDE
-		LPA_INT_toHexadecimalASCII(outBuffer, 1024, &temp2);
+		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &temp2);
 		LPA_INT_LOG_DIVIDE("temp2: %s\n", outBuffer);
 #endif
 
 		LPA_INT_subtract(&temp3, &temp2, &temp1);
 #if LPA_INT_DEBUG_DIVIDE
-		LPA_INT_toHexadecimalASCII(outBuffer, 1024, &temp3);
+		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &temp3);
 		LPA_INT_LOG_DIVIDE("temp3: %s\n", outBuffer);
 #endif
 		/* D5. if borrow flag then Q[j] -= 1 & invert Awork,  Awork = Awork + Bwork */
@@ -618,7 +620,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 			LPA_INT_add(&temp2, &temp3, &bWork);
 			LPA_INT_copyNumber(&temp3, &temp2);
 #if LPA_INT_DEBUG_DIVIDE
-			LPA_INT_toHexadecimalASCII(outBuffer, 1024, &temp3);
+			LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &temp3);
 			LPA_INT_LOG_DIVIDE("negative temp3: %s\n", outBuffer);
 #endif
 		}
@@ -632,7 +634,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 			aWork.pDigits[dstDigit] = src;
 		}
 #if LPA_INT_DEBUG_DIVIDE
-		LPA_INT_toHexadecimalASCII(outBuffer, 1024, &aWork);
+		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &aWork);
 		LPA_INT_LOG_DIVIDE("aWork: %s\n", outBuffer);
 #endif
 
@@ -668,6 +670,82 @@ void LPA_INT_initNumber(LPA_INT_number* const pNumber)
 void LPA_INT_freeNumber(LPA_INT_number* const pNumber)
 {
 	LPA_INT_zeroNumber(pNumber);
+}
+
+void LPA_INT_toDecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_INT_number* const pNumber)
+{
+	LPA_INT_size i;
+	size_t outIndex = 0;
+	const LPA_INT_size maxLoop = pNumber->numDigits;
+	size_t maxValidChar = 0;
+	int validNumber = 0;
+	LPA_INT_number number;
+	LPA_INT_number remainder;
+	LPA_INT_size len = 0;
+
+	if (maxLoop == 0)
+	{
+		pBuffer[0] = '0';
+		pBuffer[1] = '\0';
+		return;
+	}
+
+	LPA_INT_initNumber(&number);
+	LPA_INT_copyNumber(&number, pNumber);
+
+	do
+	{
+		LPA_INT_number work;
+		char c = '*';
+		LPA_INT_digitIntermediate value = 0;
+		LPA_INT_initNumber(&work);
+		LPA_INT_initNumber(&remainder);
+		LPA_INT_singleDivide(&work, &remainder, &number, 10);
+		if (remainder.numDigits > 0)
+		{
+			value = remainder.pDigits[0];
+		}
+
+		LPA_INT_copyNumber(&number, &work);
+		LPA_INT_freeNumber(&work);
+		LPA_INT_freeNumber(&remainder);
+
+		c = (char)('0' + value);
+		pBuffer[outIndex] = c;
+		if (value > 0)
+		{
+			maxValidChar = outIndex;
+			validNumber = 1;
+		}
+		++outIndex;
+		if (outIndex == maxNumChars)
+		{
+			--outIndex;
+			break;
+		}
+
+		len = LPA_INT_length(&number);
+	} while (len > 0);
+
+	LPA_INT_freeNumber(&number);
+	LPA_INT_freeNumber(&remainder);
+
+	if (validNumber == 0)
+	{
+		pBuffer[0] = '0';
+		maxValidChar = 0;
+	}
+	outIndex = maxValidChar+1;
+	pBuffer[outIndex] = '\0';
+
+	/* reverse the string to make it correct for printing could do this in the above loop, */
+ 	/* but then would need to compute the number of characters in the output which is a more complex loop than a simple reverse */
+	for (i = 0; i < outIndex/2; ++i)
+	{
+		char c = pBuffer[outIndex-1-i];
+		pBuffer[outIndex-1-i] = pBuffer[i];
+		pBuffer[i] = c;
+	}
 }
 
 void LPA_INT_toHexadecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_INT_number* const pNumber)
