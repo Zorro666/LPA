@@ -37,7 +37,8 @@ void LPA_BCD_fromUint64(LPA_BCD_number* const pNumber, LPA_uint64 value);
 /* Decimal ASCII only (signed or unsigned) */
 void LPA_BCD_fromDecimalASCII(LPA_BCD_number* const pNumber, const char* const value);
 
-void LPA_BCD_toDecimalASCII(char* const pBuffer, const LPA_BCD_number* const pNumber, const size_t maxNumChars);
+void LPA_BCD_toDecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_BCD_number* const pNumber);
+void LPA_BCD_toHexadecimalASCII(char* const pBuffer, const size_t maxNumChars, const LPA_BCD_number* const pNumber);
 
 void LPA_BCD_add(LPA_BCD_number* const pResult, const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
 void LPA_BCD_subtract(LPA_BCD_number* const pResult, const LPA_BCD_number* const pA, const LPA_BCD_number* const pB);
