@@ -75,32 +75,54 @@ static int doLPA_BCDTest1(const char* const test, LPA_BCD_func1 testFunc, const 
 
 	testFunc(&lpaResult, &lpaA, &lpaB);
 
-	LPA_BCD_toDecimalASCII(outA, &lpaA, CHAR_BUFFER_SIZE);
-	LPA_BCD_toDecimalASCII(outB, &lpaB, CHAR_BUFFER_SIZE);
-	LPA_BCD_toDecimalASCII(outResult, &lpaResult, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(outA, CHAR_BUFFER_SIZE, &lpaA);
+	LPA_BCD_toDecimalASCII(outB, CHAR_BUFFER_SIZE, &lpaB);
+	LPA_BCD_toDecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
 	if (verbose)
 	{
 		printf("%s:\tBCD: %s long: %ld BCD: %s %s %s = %s long: %ld %s %ld = %ld\n", 
 				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
 	}
 
+	LPA_BCD_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
+	sprintf(resultTruth, "%s%lX", (result < 0) ? "-" : "", (result < 0) ? -result : result);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
+	}
+
+	LPA_BCD_toDecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
 	sprintf(resultTruth, "%ld", result);
 	if (strcmp(resultTruth, outResult) != 0)
 	{
 		success = 0;
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
 	}
 	LPA_BCD_freeNumber(&lpaResult);
 	LPA_BCD_fromInt64(&lpaResult, result);
-	LPA_BCD_toDecimalASCII(resultTruth, &lpaResult, CHAR_BUFFER_SIZE);
+
+	LPA_BCD_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
+	LPA_BCD_toHexadecimalASCII(resultTruth, CHAR_BUFFER_SIZE, &lpaResult);
+	sprintf(resultTruth, "%s%lX", (result < 0) ? "-" : "", (result < 0) ? -result : result);
 	if (strcmp(resultTruth, outResult) != 0)
 	{
 		success = 0;
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
 	}
+
+	LPA_BCD_toDecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
+	LPA_BCD_toDecimalASCII(resultTruth, CHAR_BUFFER_SIZE, &lpaResult);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
+	}
+
 	if (success == 0)
 	{
 		fprintf(stderr, "%s:\tBCD: %s long: %ld\nBCD: %s %s %s = %s\nlong: %ld %s %ld = %ld\n", 
 				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
-		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
 	}
 
 	LPA_BCD_freeNumber(&lpaResult);
@@ -147,10 +169,10 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 
 	testFunc(&lpaResult1, &lpaResult2, &lpaA, &lpaB);
 
-	LPA_BCD_toDecimalASCII(outA, &lpaA, CHAR_BUFFER_SIZE);
-	LPA_BCD_toDecimalASCII(outB, &lpaB, CHAR_BUFFER_SIZE);
-	LPA_BCD_toDecimalASCII(outResult1, &lpaResult1, CHAR_BUFFER_SIZE);
-	LPA_BCD_toDecimalASCII(outResult2, &lpaResult2, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(outA, CHAR_BUFFER_SIZE, &lpaA);
+	LPA_BCD_toDecimalASCII(outB, CHAR_BUFFER_SIZE, &lpaB);
+	LPA_BCD_toDecimalASCII(outResult1, CHAR_BUFFER_SIZE, &lpaResult1);
+	LPA_BCD_toDecimalASCII(outResult2, CHAR_BUFFER_SIZE, &lpaResult2);
 	if (verbose)
 	{
 		printf("%s:\tBCD: %s long: %ld BCD: %s %s %s = %s long: %ld %s %ld = %ld\n", 
@@ -165,7 +187,7 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 
 	LPA_BCD_freeNumber(&lpaResult1);
 	LPA_BCD_fromInt64(&lpaResult1, result1);
-	LPA_BCD_toDecimalASCII(result1Truth, &lpaResult1, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(result1Truth, CHAR_BUFFER_SIZE, &lpaResult1);
 	if (strcmp(result1Truth, outResult1) != 0)
 	{
 		success1 = 0;
@@ -190,7 +212,7 @@ static int doLPA_BCDTest2(const char* const test1, const char* const test2, LPA_
 
 	LPA_BCD_freeNumber(&lpaResult2);
 	LPA_BCD_fromInt64(&lpaResult2, result2);
-	LPA_BCD_toDecimalASCII(result2Truth, &lpaResult2, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(result2Truth, CHAR_BUFFER_SIZE, &lpaResult2);
 	if (strcmp(result2Truth, outResult2) != 0)
 	{
 		success2 = 0;
@@ -326,14 +348,34 @@ static int doLPA_INTTest1(const char* const test, LPA_INT_func1 testFunc, const 
 				test, outResult, result, outA, test, outB, outResult, a, test, b, result);
 	}
 
+	LPA_INT_toDecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
+	sprintf(resultTruth, "%ld", result);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
+	}
+
+	LPA_INT_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
 	sprintf(resultTruth, "%lX", result);
 	if (strcmp(resultTruth, outResult) != 0)
 	{
 		success = 0;
 	}
+
 	LPA_INT_freeNumber(&lpaResult);
 	LPA_INT_fromInt64(&lpaResult, result);
-	LPA_INT_toHexadecimalASCII(resultTruth, CHAR_BUFFER_SIZE, &lpaResult);
+
+	LPA_INT_toDecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
+	sprintf(resultTruth, "%ld", result);
+	if (strcmp(resultTruth, outResult) != 0)
+	{
+		success = 0;
+		fprintf(stderr, "TEST FAILED '%s' : %ld %s %ld = %s != %s\n", test, a, test, b, resultTruth, outResult);
+	}
+
+	LPA_INT_toHexadecimalASCII(outResult, CHAR_BUFFER_SIZE, &lpaResult);
+	sprintf(resultTruth, "%lX", result);
 	if (strcmp(resultTruth, outResult) != 0)
 	{
 		success = 0;
@@ -578,33 +620,33 @@ static int testBCD(const int argc, char** argv)
 	LPA_BCD_fromInt64(&aNumber, inA);
 	printf("numDigits:%u\n", aNumber.numDigits);
 
-	LPA_BCD_toDecimalASCII(outBuffer, &aNumber, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &aNumber);
 	printf("in:%ld\n", inA);
 	printf("out:%s\n", outBuffer);
 
 	LPA_BCD_fromDecimalASCII(&testNumber, "100");
-	LPA_BCD_toDecimalASCII(outBuffer, &testNumber, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 	printf("'%s' outASCII:%s\n", "100", outBuffer);
 
 	if (argc > 1)
 	{
 		LPA_BCD_freeNumber(&testNumber);
 		LPA_BCD_fromDecimalASCII(&testNumber, argv[1]);
-		LPA_BCD_toDecimalASCII(outBuffer, &testNumber, CHAR_BUFFER_SIZE);
+		LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 		printf("'%s' outASCII:%s\n", argv[1], outBuffer);
 	}
 	if (argc > 2)
 	{
 		LPA_BCD_freeNumber(&testNumber);
 		LPA_BCD_fromDecimalASCII(&testNumber, argv[2]);
-		LPA_BCD_toDecimalASCII(outBuffer, &testNumber, CHAR_BUFFER_SIZE);
+		LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 		printf("'%s' outASCII:%s\n", argv[2], outBuffer);
 	}
 
 	inA32 = (int)(inA);
 	LPA_BCD_freeNumber(&testNumber);
 	LPA_BCD_fromInt32(&testNumber, inA32);
-	LPA_BCD_toDecimalASCII(outBuffer, &testNumber, CHAR_BUFFER_SIZE);
+	LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 	printf("inA32:%d\n", inA32);
 	printf("out:%s\n", outBuffer);
 
