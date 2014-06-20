@@ -597,6 +597,7 @@ static int testBCD(const int argc, char** argv)
 	long inB = 166;
 	long numTests = 1;
 	char outBuffer[CHAR_BUFFER_SIZE];
+	int i;
 
 	LPA_BCD_initNumber(&testNumber);
 	LPA_BCD_initNumber(&aNumber);
@@ -624,23 +625,31 @@ static int testBCD(const int argc, char** argv)
 	printf("in:%ld\n", inA);
 	printf("out:%s\n", outBuffer);
 
+	LPA_BCD_freeNumber(&testNumber);
 	LPA_BCD_fromDecimalASCII(&testNumber, "100");
 	LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
-	printf("'%s' outASCII:%s\n", "100", outBuffer);
+	printf("Decimal '%s' outASCII:%s\n", "100", outBuffer);
 
-	if (argc > 1)
+	LPA_BCD_freeNumber(&testNumber);
+	LPA_BCD_fromHexadecimalASCII(&testNumber, "100");
+	LPA_BCD_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
+	printf("Hex '%s' outASCII:%s\n", "100", outBuffer);
+
+	for (i = 1; i < argc; ++i)
 	{
+		char outBuffer2[CHAR_BUFFER_SIZE];
+
 		LPA_BCD_freeNumber(&testNumber);
-		LPA_BCD_fromDecimalASCII(&testNumber, argv[1]);
+		LPA_BCD_fromDecimalASCII(&testNumber, argv[i]);
 		LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
-		printf("'%s' outASCII:%s\n", argv[1], outBuffer);
-	}
-	if (argc > 2)
-	{
+		LPA_BCD_toHexadecimalASCII(outBuffer2, CHAR_BUFFER_SIZE, &testNumber);
+		printf("Decimal '%s' Hex outASCII:%s Decimal outASCII:%s\n", argv[i], outBuffer, outBuffer2);
+
 		LPA_BCD_freeNumber(&testNumber);
-		LPA_BCD_fromDecimalASCII(&testNumber, argv[2]);
-		LPA_BCD_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
-		printf("'%s' outASCII:%s\n", argv[2], outBuffer);
+		LPA_BCD_fromHexadecimalASCII(&testNumber, argv[i]);
+		LPA_BCD_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
+		LPA_BCD_toDecimalASCII(outBuffer2, CHAR_BUFFER_SIZE, &testNumber);
+		printf("Hex '%s' Hex outASCII:%s Decimal outASCII:%s\n", argv[i], outBuffer, outBuffer2);
 	}
 
 	inA32 = (int)(inA);

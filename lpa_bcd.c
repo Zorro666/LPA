@@ -248,9 +248,12 @@ static void LPA_BCD_extendNumber(LPA_BCD_number* const pNumber, const LPA_BCD_si
 
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
 		pNumber->numDigits = newNumDigits;
-		memcpy(pNumber->pDigits, pOldDigits, oldMemorySize);
+		if (pOldDigits != NULL)
+		{
+			memcpy(pNumber->pDigits, pOldDigits, oldMemorySize);
+			LPA_freeMem((void*)pOldDigits);
+		}
 		memset(pNumber->pDigits+oldNumDigits, 0, newMemorySize-oldMemorySize);
-		LPA_freeMem((void*)pOldDigits);
 	}
 }
 
@@ -1016,6 +1019,80 @@ void LPA_BCD_toDecimalASCII(char* const pBuffer, const size_t maxNumChars, const
 		pBuffer[outIndex-1-i] = pBuffer[i];
 		pBuffer[i] = c;
 	}
+}
+
+void LPA_BCD_fromHexadecimalASCII(LPA_BCD_number* const pNumber, const char* const value)
+{
+	const char* pStr = value;
+	int negative = 0;
+	LPA_BCD_number base;
+
+	LPA_BCD_initNumber(pNumber);
+	if (pStr == NULL)
+	{
+		return;
+	}
+	if (*pStr == '\0')
+	{
+		return;
+	}
+
+	while (*pStr != '\0')
+	{
+		const char c = *pStr;
+		if ((c == '-') || (c == '+') || (((c >= '0') && (c <= '9')) || ((c >= 'A') && (c <= 'F')) || ((c >= 'a') && (c <= 'f'))))
+		{
+			break;
+		}
+		++pStr;
+	}
+
+	if (*pStr == '-')
+	{
+		negative = 1;
+		++pStr;
+	}
+	else if (*pStr == '+')
+	{
+		negative = 0;
+		++pStr;
+	}
+
+	LPA_BCD_fromUint64(&base, 16);
+	do
+	{
+		LPA_BCD_number temp1;
+		LPA_BCD_number temp2;
+		const char c = *pStr;
+		LPA_BCD_digitIntermediate digit = 0;
+
+		if ((c >= '0') && (c <= '9'))
+		{
+			digit = (LPA_BCD_digit)(c - '0');
+		}
+		else if ((c >= 'A') && (c <= 'F'))
+		{
+			digit = (LPA_BCD_digit)(c - 'A' + 0xA);
+		}
+		else if ((c >= 'a') && (c <= 'f'))
+		{
+			digit = (LPA_BCD_digit)(c - 'a' + 0xa);
+		}
+		if (digit > 15)
+		{
+			LPA_BCD_freeNumber(pNumber);
+			return;
+		}
+		LPA_BCD_fromInt32(&temp2, digit);
+		LPA_BCD_initNumber(&temp1);
+		LPA_BCD_multiply(&temp1, pNumber, &base);
+		LPA_BCD_add(pNumber, &temp1, &temp2);
+		LPA_BCD_freeNumber(&temp1);
+		LPA_BCD_freeNumber(&temp2);
+		++pStr;
+	}
+	while (*pStr != '\0');
+	pNumber->negative = negative;
 }
 
 /* Decimal ASCII only */
