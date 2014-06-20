@@ -1,14 +1,10 @@
 Short
 * Test LPA divide function - need a test for multi-digit divide, so far only tested single digit divide
+
+Medium
 * LPA divide use a power of 2 for divisor - so the multiply & divide become shifts
 * LPA divide - perhaps need a function for the multiply & subtract
 * Optimise on LPA divide - stop the digit copying, only need 3 digits worth
-
-Medium
-* Implement LPA create from ASCII (decimal)
-* Test LPA create from ASCII (decimal)
-* Implement BCD create from ASCII (hexadecimal)
-* Test BCD create from ASCII (hexadecimal)
 
 Long
 * Try out Karatsuba algorithm for multiply
