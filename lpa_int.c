@@ -161,9 +161,12 @@ static void LPA_INT_extendNumber(LPA_INT_number* const pNumber, const LPA_INT_si
 
 		pNumber->pDigits = LPA_allocMem(newMemorySize);
 		pNumber->numDigits = newNumDigits;
-		memcpy(pNumber->pDigits, pOldDigits, oldMemorySize);
+		if (pOldDigits != NULL)
+		{
+			memcpy(pNumber->pDigits, pOldDigits, oldMemorySize);
+			LPA_freeMem((void*)pOldDigits);
+		}
 		memset(pNumber->pDigits+oldNumDigits, 0, newMemorySize-oldMemorySize);
-		LPA_freeMem((void*)pOldDigits);
 	}
 }
 
@@ -805,6 +808,67 @@ void LPA_INT_toHexadecimalASCII(char* const pBuffer, const size_t maxNumChars, c
 	}
 }
 
+void LPA_INT_fromDecimalASCII(LPA_INT_number* const pNumber, const char* const value)
+{
+	const char* pStr = value;
+	LPA_INT_number base;
+
+	LPA_INT_initNumber(pNumber);
+	if (pStr == NULL)
+	{
+		return;
+	}
+	if (*pStr == '\0')
+	{
+		return;
+	}
+
+	while (*pStr != '\0')
+	{
+		const char c = *pStr;
+		if ((c == '-') || (c == '+') || ((c >= '0') && (c <= '9')))
+		{
+			break;
+		}
+		++pStr;
+	}
+
+	LPA_INT_fromUint64(&base, 10);
+	do
+	{
+		LPA_INT_number temp1;
+		LPA_INT_number temp2;
+		const char c = *pStr;
+		LPA_INT_digit digit = 0;
+
+		if ((c >= '0') && (c <= '9'))
+		{
+			digit = (LPA_INT_digit)(c - '0');
+		}
+		else if ((c >= 'A') && (c <= 'F'))
+		{
+			digit = (LPA_INT_digit)(c - 'A' + 0xA);
+		}
+		else if ((c >= 'a') && (c <= 'f'))
+		{
+			digit = (LPA_INT_digit)(c - 'a' + 0xa);
+		}
+		if (digit > 10)
+		{
+			LPA_INT_freeNumber(pNumber);
+			return;
+		}
+		LPA_INT_fromUint32(&temp2, digit);
+		LPA_INT_initNumber(&temp1);
+		LPA_INT_multiply(&temp1, pNumber, &base);
+		LPA_INT_add(pNumber, &temp1, &temp2);
+		LPA_INT_freeNumber(&temp1);
+		LPA_INT_freeNumber(&temp2);
+		++pStr;
+	}
+	while (*pStr != '\0');
+}
+
 /* Hexadecimal ASCII only */
 void LPA_INT_fromHexadecimalASCII(LPA_INT_number* const pNumber, const char* const value)
 {
@@ -866,8 +930,7 @@ void LPA_INT_fromHexadecimalASCII(LPA_INT_number* const pNumber, const char* con
 		}
 		if (digit > 15)
 		{
-			LPA_freeMem(pNumber->pDigits);
-			LPA_INT_initNumber(pNumber);
+			LPA_INT_freeNumber(pNumber);
 			return;
 		}
 		LPA_INT_LOG_FROMHEX("c:%c index:%d digit:%u\n", c, index, digit);

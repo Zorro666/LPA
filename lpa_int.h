@@ -27,6 +27,7 @@ void LPA_INT_fromInt64(LPA_INT_number* const pNumber, LPA_int64 value);
 void LPA_INT_fromUint32(LPA_INT_number* const pNumber, LPA_uint32 value);
 void LPA_INT_fromUint64(LPA_INT_number* const pNumber, LPA_uint64 value);
 
+void LPA_INT_fromDecimalASCII(LPA_INT_number* const pNumber, const char* const value);
 /* Hexadecimal ASCII only (signed) */
 void LPA_INT_fromHexadecimalASCII(LPA_INT_number* const pNumber, const char* const value);
 

@@ -710,6 +710,7 @@ static int testINT(const int argc, char** argv)
 	long result = 0;
 	long numTests = 1;
 	char outBuffer[CHAR_BUFFER_SIZE];
+	int i;
 
 	LPA_INT_initNumber(&testNumber);
 	LPA_INT_initNumber(&aNumber);
@@ -742,19 +743,21 @@ static int testINT(const int argc, char** argv)
 	LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
 	printf("'%s' outASCII:0x%s %d 0x%X\n", "100", outBuffer, testNumber.numDigits, testNumber.pDigits[0]);
 
-	if (argc > 1)
+	for (i = 1; i < argc; ++i)
 	{
+		char outBuffer2[CHAR_BUFFER_SIZE];
+
 		LPA_INT_freeNumber(&testNumber);
-		LPA_INT_fromHexadecimalASCII(&testNumber, argv[1]);
-		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
-		printf("'%s' %ld 0x%lX outASCII:0x%s %d 0x%X\n", argv[1], inA, (unsigned long)inA, outBuffer, testNumber.numDigits, testNumber.pDigits[0]);
-	}
-	if (argc > 2)
-	{
+		LPA_INT_fromDecimalASCII(&testNumber, argv[i]);
+		LPA_INT_toDecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
+		LPA_INT_toHexadecimalASCII(outBuffer2, CHAR_BUFFER_SIZE, &testNumber);
+		printf("Decimal '%s' Hex outASCII:%s Decimal outASCII:%s\n", argv[i], outBuffer, outBuffer2);
+
 		LPA_INT_freeNumber(&testNumber);
-		LPA_INT_fromHexadecimalASCII(&testNumber, argv[2]);
+		LPA_INT_fromHexadecimalASCII(&testNumber, argv[i]);
 		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &testNumber);
-		printf("'%s' %ld 0x%lX outASCII:0x%s %d 0x%X\n", argv[2], inB, (unsigned long)inB, outBuffer, testNumber.numDigits, testNumber.pDigits[0]);
+		LPA_INT_toDecimalASCII(outBuffer2, CHAR_BUFFER_SIZE, &testNumber);
+		printf("Hex '%s' Hex outASCII:%s Decimal outASCII:%s\n", argv[i], outBuffer, outBuffer2);
 	}
 
 	inA32 = (int)(inA);
