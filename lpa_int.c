@@ -276,14 +276,15 @@ static void LPA_INT_subtractInternal(LPA_INT_number* const pResult, const LPA_IN
 		{
 			bDigit = pB->pDigits[i];
 		}
-		/* digit add e.g. base precision arithmetic */
+		/* digit subtract e.g. base precision arithmetic */
 		{
 			const LPA_INT_digit aValue = aDigit;
 			const LPA_INT_digit bValue = bDigit;
-			LPA_INT_digit sumValue = aValue - borrow;
+			LPA_INT_digit temp = aValue - borrow;
+			LPA_INT_digit sumValue;
 			LPA_INT_LOG_SUBTRACT("borrow:%u sumValue:%X aValue:%X bValue:%X\n", borrow, sumValue, aValue, bValue);
 
-			if (sumValue > aValue)
+			if (temp > aValue)
 			{
 				borrow = 1;
 			}
@@ -291,8 +292,8 @@ static void LPA_INT_subtractInternal(LPA_INT_number* const pResult, const LPA_IN
 			{
 				borrow = 0;
 			}
-			sumValue -= bValue;
-			if (sumValue > bValue)
+			sumValue = temp - bValue;
+			if (sumValue > temp)
 			{
 				borrow = 1;
 			}
@@ -416,7 +417,7 @@ static void LPA_INT_singleDivide(LPA_INT_number* const pQuotient, LPA_INT_number
 	{
 		LPA_INT_size j = outIndex;
 		LPA_INT_digit aJ = pA->pDigits[j];
-		aPartial = (aPartial << 32ul) + aJ;
+		aPartial = (aPartial << LPA_INT_NUM_BITS_PER_DIGIT) + aJ;
 		q = aPartial / b;
 		pQuotient->pDigits[outIndex] = (LPA_INT_digit)q;
 		aPartial -= (b * q);
@@ -440,6 +441,11 @@ static void LPA_INT_singleDivide(LPA_INT_number* const pQuotient, LPA_INT_number
 	LPA_INT_freeNumber(&bWork);
 }
 
+static LPA_INT_digit LPA_int_findD(const LPA_INT_digit B1)
+{
+	return (LPA_INT_digit)((1ul << LPA_INT_NUM_BITS_PER_DIGIT)/(B1+1));
+}
+
 /* This function isn't optimised yet */
 static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_number* const pRemainder,
 																		const LPA_INT_number* const pA, const LPA_INT_number* const pB)
@@ -454,15 +460,15 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	LPA_INT_size mAllocSize;
 	LPA_INT_size n;
 	LPA_INT_size aWorkLen;
-	LPA_INT_digitIntermediate B1;
+	LPA_INT_digit B1;
 	LPA_INT_number aWork;
 	LPA_INT_number bWork;
 	LPA_INT_number temp1;
 	LPA_INT_number temp2;
 	LPA_INT_number temp3;
-	LPA_INT_digitIntermediate bWorkNm1;
-	LPA_INT_digitIntermediate bWorkNm2;
-	LPA_int64 spD;
+	LPA_INT_digit bWorkNm1;
+	LPA_INT_digit bWorkNm2;
+	LPA_INT_digit spD;
 #if LPA_INT_DEBUG_DIVIDE
 	char outBuffer[CHAR_BUFFER_SIZE];
 #endif
@@ -516,10 +522,10 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	/* D1. Normalize: D = <base> / (B[n-1]+1) */
 	/* D can be arbitrary as long as B[1]*D >= base/2 e.g. D can made into a power of 2 for power of 2 bases */
 	B1 = pB->pDigits[n-1];
-	spD = (LPA_int64)((1l << 32) / (B1 + 1));
-	LPA_INT_fromInt64(&temp1, spD);
+	spD = LPA_int_findD(B1);
+	LPA_INT_fromUint64(&temp1, spD);
 
-	LPA_INT_LOG_DIVIDE("B1:%lX spD:%lX\n", B1, spD);
+	LPA_INT_LOG_DIVIDE("B1:%X spD:%X\n", B1, spD);
 
 	/* Awork = A * D : must always add a leading digit */
 	LPA_INT_multiply(&aWork, pA, &temp1);
@@ -553,35 +559,35 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	do
 	{
 		LPA_INT_size j = aWorkLen - jLoop - 1;
-		LPA_INT_digitIntermediate qUnit = 9;
+		LPA_INT_digit qUnit = (1ul << LPA_INT_NUM_BITS_PER_DIGIT) - 1;
 		LPA_INT_digitIntermediate aWorkJ = aWork.pDigits[j];
 		LPA_INT_digitIntermediate aWorkJm1 = (j > 0) ? aWork.pDigits[j-1] : 0;
 		LPA_INT_digitIntermediate aWorkJm2 = (j > 1) ? aWork.pDigits[j-2] : 0;
 
-		LPA_INT_LOG_DIVIDE("jLoop:%u j:%d aWorkJ:%lX bWorkNm1:%lX\n", jLoop, j, aWorkJ, bWorkNm1);
+		LPA_INT_LOG_DIVIDE("jLoop:%u j:%d aWorkJ:%lX bWorkNm1:%X\n", jLoop, j, aWorkJ, bWorkNm1);
 		/* D3. Calculate Qunit: if Awork[j] == Bwork[1], Qunit = base - 1 else Qunit = (Awork[j] * base + Awork[j+1]) / Bwork[1] */
 		if (aWorkJ != bWorkNm1)
 		{
-			qUnit = ((aWorkJ << 32) + aWorkJm1) / bWorkNm1;
-			LPA_INT_LOG_DIVIDE("qUnit: %lX jLoop:%u aWorkJm1:%lX\n", qUnit, jLoop, aWorkJm1);
+			qUnit = (LPA_INT_digit)(((aWorkJ << LPA_INT_NUM_BITS_PER_DIGIT) + aWorkJm1) / bWorkNm1);
+			LPA_INT_LOG_DIVIDE("qUnit: %X jLoop:%u aWorkJm1:%lX\n", qUnit, jLoop, aWorkJm1);
 		}
-		/* if (Bwork[2] * qUnit > (Awork[j] * 2^32 + Awork[j+1] - qUnit * Bwork[1])* 2^32 + Awork[j+2] qUnit -=1 and test again */
-		if ((bWorkNm2 * qUnit) > ((((aWorkJ << 32l) + aWorkJm1) - qUnit * bWorkNm1) << 32l) + aWorkJm2)
+		/* if (Bwork[2] * qUnit > (Awork[j] * 2^LPA_INT_NUM_BITS_PER_DIGIT + Awork[j+1] - qUnit * Bwork[1])* 2^LPA_INT_NUM_BITS_PER_DIGIT + Awork[j+2] qUnit -=1 and test again */
+		if ((bWorkNm2 * qUnit) > ((((aWorkJ << LPA_INT_NUM_BITS_PER_DIGIT) + aWorkJm1) - qUnit * bWorkNm1) << LPA_INT_NUM_BITS_PER_DIGIT) + aWorkJm2)
 		{
 			--qUnit;
-			LPA_INT_LOG_DIVIDE("qUnit: %lX one too big\n", qUnit);
-			if ((bWorkNm2 * qUnit) > ((((aWorkJ << 32l) + aWorkJm1) - qUnit * bWorkNm1) << 32l) + aWorkJm2)
+			LPA_INT_LOG_DIVIDE("qUnit: %X one too big\n", qUnit);
+			if ((bWorkNm2 * qUnit) > ((((aWorkJ << LPA_INT_NUM_BITS_PER_DIGIT) + aWorkJm1) - qUnit * bWorkNm1) << LPA_INT_NUM_BITS_PER_DIGIT) + aWorkJm2)
 			{
 				--qUnit;
-				LPA_INT_LOG_DIVIDE("qUnit: %lX two too big\n", qUnit);
+				LPA_INT_LOG_DIVIDE("qUnit: %X two too big\n", qUnit);
 			}
 		}
 
-		/* if (Bwork[2] * qUnit > Awork[j] * 2^32 + Awork[j+1] - qUnit * Bwork[1] qUnit -=1 */
+		/* if (Bwork[2] * qUnit > Awork[j] * 2^LPA_INT_NUM_BITS_PER_DIGIT + Awork[j+1] - qUnit * Bwork[1] qUnit -=1 */
 		/* D4. Multiply & Subtract: Awork[j...j+n] = A[j...j+n] - Qunit * Bwork, save the borrow flag if Awork is -ve */
 		LPA_INT_singleMultiply(&temp1, &bWork, (LPA_INT_digit)qUnit);
 #if LPA_INT_DEBUG_DIVIDE
-		LPA_INT_LOG_DIVIDE("qUnit: 0x%lX n:%d j:%d jLoop:%d n-j:%d\n", qUnit, n, j, jLoop, n-j);
+		LPA_INT_LOG_DIVIDE("qUnit: 0x%X n:%d j:%d jLoop:%d n-j:%d\n", qUnit, n, j, jLoop, n-j);
 		LPA_INT_toHexadecimalASCII(outBuffer, CHAR_BUFFER_SIZE, &temp1);
 		LPA_INT_LOG_DIVIDE("temp1: %s\n", outBuffer);
 #endif
@@ -642,7 +648,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 #endif
 
 		/* D6. Set Q[j] = Qunit */
-		LPA_INT_LOG_DIVIDE("pQuotient[%d]: 0x%lX\n", mAllocSize - 1 - jLoop, qUnit);
+		LPA_INT_LOG_DIVIDE("pQuotient[%d]: 0x%X\n", mAllocSize - 1 - jLoop, qUnit);
 		pQuotient->pDigits[mAllocSize-1-jLoop] = (LPA_INT_digit)qUnit;
 		++jLoop;
 	}
