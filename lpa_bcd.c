@@ -1081,6 +1081,7 @@ void LPA_BCD_fromHexadecimalASCII(LPA_BCD_number* const pNumber, const char* con
 		if (digit > 15)
 		{
 			LPA_BCD_freeNumber(pNumber);
+			LPA_BCD_freeNumber(&base);
 			return;
 		}
 		LPA_BCD_fromInt32(&temp2, digit);
@@ -1093,6 +1094,7 @@ void LPA_BCD_fromHexadecimalASCII(LPA_BCD_number* const pNumber, const char* con
 	}
 	while (*pStr != '\0');
 	pNumber->negative = negative;
+	LPA_BCD_freeNumber(&base);
 }
 
 /* Decimal ASCII only */

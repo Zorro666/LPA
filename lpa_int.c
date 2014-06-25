@@ -9,7 +9,7 @@ large precision arithmetic functions
 
 #include "lpa_int.h"
 
-#define LPA_INT_DEBUG (1)
+#define LPA_INT_DEBUG (0)
 
 #define CHAR_BUFFER_SIZE (1024)
 
@@ -22,7 +22,7 @@ large precision arithmetic functions
 #define LPA_INT_DEBUG_ADD (0)
 #define LPA_INT_DEBUG_SUBTRACT (0)
 #define LPA_INT_DEBUG_MULTIPLY (0)
-#define LPA_INT_DEBUG_DIVIDE (1)
+#define LPA_INT_DEBUG_DIVIDE (0)
 #define LPA_INT_DEBUG_LENGTH (0)
 #define LPA_INT_DEBUG_INVERT (0)
 #define LPA_INT_DEBUG_TOHEX (0)
@@ -463,27 +463,13 @@ static LPA_uint32 LPA_INT_log2(const LPA_INT_digit value)
 	return r;
 }
 
-static LPA_INT_digit LPA_int_findDold(const LPA_INT_digit B1)
-{
-	/* need to find a D such that B[1]*D >= base/2 */
-	LPA_INT_digit Dold = (LPA_INT_digit)((1ul << LPA_INT_NUM_BITS_PER_DIGIT)/(B1+1));
-
-	if (B1*Dold < (1<<16))
-	{
-		printf("Dold:0x%X B1:0x%X\n", Dold, B1);
-		LPA_ERROR("bad Dold\n");
-		return 0;
-	}
-	return Dold;
-}
-
-static LPA_INT_digit LPA_int_findD(const LPA_INT_digit B1)
+static LPA_INT_digit LPA_int_findLog2D(const LPA_INT_digit B1)
 {
 	/* need to find a D such that B[1]*D >= base/2 */
 	/* Choose D  = 2^((NUM_BITS_PER_DIGIT-1) - log2(B[1])) */
-	LPA_uint32 logB1 = LPA_INT_log2(B1);
-	LPA_INT_digit logD = (LPA_INT_NUM_BITS_PER_DIGIT-1 - logB1);
-	LPA_INT_digit D = (LPA_INT_digit)(1u << logD);
+	LPA_uint32 log2B1 = LPA_INT_log2(B1);
+	LPA_INT_digit log2D = (LPA_INT_NUM_BITS_PER_DIGIT-1 - log2B1);
+	LPA_INT_digit D = (LPA_INT_digit)(1u << log2D);
 
 	if (B1*D < (1<<16))
 	{
@@ -492,7 +478,7 @@ static LPA_INT_digit LPA_int_findD(const LPA_INT_digit B1)
 		return 0;
 	}
 
-	return D;
+	return log2D;
 }
 
 /* This function isn't optimised yet */
@@ -517,6 +503,7 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	LPA_INT_number temp3;
 	LPA_INT_digit bWorkNm1;
 	LPA_INT_digit bWorkNm2;
+	LPA_INT_digit log2D;
 	LPA_INT_digit spD;
 	int borrow;
 #if LPA_INT_DEBUG_DIVIDE
@@ -572,8 +559,8 @@ static void LPA_INT_divideInternal(LPA_INT_number* const pQuotient, LPA_INT_numb
 	/* D1. Normalize: D = <base> / (B[n-1]+1) */
 	/* D can be arbitrary as long as B[1]*D >= base/2 e.g. D can made into a power of 2 for power of 2 bases */
 	B1 = pB->pDigits[n-1];
-	spD = LPA_int_findDold(B1);
-	spD = LPA_int_findD(B1);
+	log2D = LPA_int_findLog2D(B1);
+	spD = (1u << log2D);
 	LPA_INT_fromUint64(&temp1, spD);
 
 	LPA_INT_LOG_DIVIDE("B1:%X spD:%X\n", B1, spD);
@@ -920,6 +907,7 @@ void LPA_INT_fromDecimalASCII(LPA_INT_number* const pNumber, const char* const v
 		if (digit > 10)
 		{
 			LPA_INT_freeNumber(pNumber);
+			LPA_INT_freeNumber(&base);
 			return;
 		}
 		LPA_INT_fromUint32(&temp2, digit);
@@ -931,6 +919,7 @@ void LPA_INT_fromDecimalASCII(LPA_INT_number* const pNumber, const char* const v
 		++pStr;
 	}
 	while (*pStr != '\0');
+	LPA_INT_freeNumber(&base);
 }
 
 /* Hexadecimal ASCII only */
