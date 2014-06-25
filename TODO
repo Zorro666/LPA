@@ -1,15 +1,16 @@
 Short
-* Test LPA divide function - need a test for multi-digit divide, so far only tested single digit divide
+* LPA divide use a power of 2 for divisor - need shift functions (left & right)
+* Run valgrind and fix up memory leaks and uninit memory
 
 Medium
-* LPA divide use a power of 2 for divisor - so the multiply & divide become shifts
 * LPA divide - perhaps need a function for the multiply & subtract
 * Optimise on LPA divide - stop the digit copying, only need 3 digits worth
 
 Long
 * Try out Karatsuba algorithm for multiply
-* Normalize input sizes to remove if length tests (and BCD do the unpack of nibbles to bytes)
-* Unpack BCD nibble packed numbers into single byte arrays to make functions simpler
+* BCD : Normalize input sizes to remove if length tests (and BCD do the unpack of nibbles to bytes)
+* BCD : Unpack BCD nibble packed numbers into single byte arrays to make functions simpler
+* BCD : switch to unpacked storage much faster
 * Work out what to optimise on BCD divide - it is horrible right now
 * BCD divide - perhaps need a function for that multiply & subtract
 * Work out what other math functions are needed
