@@ -38,6 +38,6 @@ void LPA_INT_add(LPA_INT_number* const pResult, const LPA_INT_number* const pA, 
 void LPA_INT_subtract(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);
 void LPA_INT_multiply(LPA_INT_number* const pResult, const LPA_INT_number* const pA, const LPA_INT_number* const pB);
 void LPA_INT_divide(LPA_INT_number* const pQuotient, LPA_INT_number* const pRemainder,
-										const LPA_INT_number* const pA, const LPA_INT_number* const pB);
+									const LPA_INT_number* const pA, const LPA_INT_number* const pB);
 
 #endif
